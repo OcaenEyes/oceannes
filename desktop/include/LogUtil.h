@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-12 00:12:48
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-12 01:29:32
+ * @LastEditTime: 2023-02-12 13:51:51
  * @FilePath: /oceannes/desktop/include/LogUtil.h
  * @Description: 注释信息
  */
@@ -39,7 +39,7 @@ public:
     void setLogStream(std::ostream &stream);
     void setCpuTraceStream(std::ostream &stream);
 
-    std::ostream &getStream();
+    std::ostream &getLogStream();
     std::ostream &getCpuTraceStream();
 
     LogUtil &setLogLevel(LogLevel level);
