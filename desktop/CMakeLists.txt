@@ -5,7 +5,8 @@ project(oceannes)
 # add sources
 file(GLOB SOURCES
     ${PROJECT_SOURCE_DIR}/main.cpp
-    ${PROJECT_SOURCE_DIR}/src/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/Emulator.cpp
+    ${PROJECT_SOURCE_DIR}/src/VirtualScreen.cpp
 )
 
 # 第三方库文件夹
