@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-15 01:06:32
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-15 01:33:54
+ * @LastEditTime: 2023-02-18 09:59:41
  * @FilePath: /oceannes/desktop/include/MainBus.h
  * @Description: 注释信息
  */
@@ -47,6 +47,9 @@ private:
     std::vector<std::uint8_t> m_extRAM;
     Mapper *m_mapper;
 
+    std::unordered_map<IORegisters, std::function<void(std::uint8_t)>, IORegistersHasher> m_writeCallbacks;
+    std::unordered_map<IORegisters, std::function<std::uint8_t(void)>, IORegistersHasher> m_readCallbacks;
+
 public:
     MainBus(/* args */);
     ~MainBus();
@@ -61,13 +64,5 @@ public:
 
     const std::uint8_t *getPagePtr(std::uint8_t page);
 };
-
-MainBus::MainBus(/* args */)
-{
-}
-
-MainBus::~MainBus()
-{
-}
 
 #endif // MAINBUS_MEMEORY_H

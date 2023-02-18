@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-12 00:12:48
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-13 00:19:57
+ * @LastEditTime: 2023-02-18 10:06:59
  * @FilePath: /oceannes/desktop/include/LogUtil.h
  * @Description: 注释信息
  */
@@ -14,6 +14,12 @@
 #include <fstream>
 #include <memory>
 #include <cstring>
+
+#ifndef __FILENAME__
+#define __FILENAME__ __FILE__
+#endif
+
+#define LOG(level) if (level > LogUtil::get().getLevel()); else  LogUtil::get().getLogStream() << '[' << __FILENAME__ << ":" << std::dec << __LINE__ << "] "
 
 enum LogLevel
 {
