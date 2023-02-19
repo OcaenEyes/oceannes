@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-15 19:57:50
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-15 23:17:20
+ * @LastEditTime: 2023-02-20 00:18:33
  * @FilePath: /oceannes/desktop/include/MapperColorDreams.h
  * @Description: 注释信息
  */
@@ -20,7 +20,7 @@ private:
     std::uint32_t chrBank;
 
 public:
-    MapperColorDreams(/* args */);
+    MapperColorDreams(Cartridge &cart, std::function<void(void)> mirroring_cb);
 
     void writePRG(std::uint16_t addr, std::uint8_t value);
     std::uint8_t readPRG(std::uint16_t addr);

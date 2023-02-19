@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-15 00:43:57
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-19 19:41:34
- * @FilePath: \oceannes\desktop\src\Mapper.cpp
+ * @LastEditTime: 2023-02-20 00:16:22
+ * @FilePath: /oceannes/desktop/src/Mapper.cpp
  * @Description: 注释信息
  */
 #include "Mapper.h"
@@ -50,16 +50,19 @@ std::unique_ptr<Mapper> Mapper::createMapper(Mapper::Type mapper_t, Cartridge &c
         break;
     case MMC3:
         /* code */
-        ret.reset(new MapperMMC3(cart,intterupt_cb,mirroring_cb));
+        ret.reset(new MapperMMC3(cart, intterupt_cb, mirroring_cb));
         break;
     case AxROM:
         /* code */
+        ret.reset(new MapperAxROM(cart, mirroring_cb));
         break;
     case GxROM:
         /* code */
+        ret.reset(new MapperGxROM(cart, mirroring_cb));
         break;
     case ColorDreams:
         /* code */
+        ret.reset(new MapperColorDreams(cart, mirroring_cb));
         break;
 
     default:
