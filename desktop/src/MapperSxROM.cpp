@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-21 16:08:26
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-21 16:22:37
- * @FilePath: /oceannes/desktop/src/MapperSxROM.cpp
+ * @LastEditTime: 2023-03-11 15:46:22
+ * @FilePath: \oceannes\desktop\src\MapperSxROM.cpp
  * @Description: 注释信息
  */
 #include "MapperSxROM.h"
@@ -96,7 +96,64 @@ void MapperSxROM::writePRG(std::uint16_t addr, std::uint8_t value)
 
                 m_modeCHR = (m_tempRegister & 0x10) >> 4;
                 m_modePRG = (m_tempRegister & 0xc) >> 2;
+
+                calculatePRGPointers();
+
+                if (m_modeCHR == 0) // one 8k bank
+                {
+                    /* code */
+                    m_firstBankCHR = &m_cartridge.getVROM()[0x1000 * (m_regCHR0 | 1)];
+                    m_secondBankCHR = m_firstBankCHR + 0x1000;
+                }
+                else // tow 4k banks
+                {
+                    m_firstBankCHR = &m_cartridge.getVROM()[0x1000 * m_regCHR0];
+                    m_secondBankCHR = &m_cartridge.getVROM()[0x1000 * m_regCHR1];
+                }
             }
+            else if (addr <= 0xbfff)
+            {
+                /* code */
+                m_regCHR0 = m_tempRegister;
+                m_firstBankCHR = &m_cartridge.getVROM()[0x1000 * (m_tempRegister | (1 - m_modeCHR))];
+                if (m_modeCHR == 0)
+                {
+                    /* code */
+                    m_secondBankCHR = m_firstBankCHR + 0x1000;
+                }
+            }
+            else if (addr <= 0xdfff)
+            {
+                /* code */
+                m_regCHR1 = m_tempRegister;
+                if (m_modeCHR == 1)
+                {
+                    /* code */
+                    m_secondBankCHR = &m_cartridge.getVROM()[0x1000 * m_tempRegister];
+                }
+            }
+            else
+            {
+                if ((m_tempRegister & 0x10) == 0x10)
+                {
+                    /* code */
+                    LOG(Info) << "PRG-RAM activated" << std::endl;
+                }
+
+                m_tempRegister &= 0xf;
+                m_regPRG = m_tempRegister;
+                calculatePRGPointers();
+            }
+
+            m_tempRegister = 0;
+            m_writeCounter = 0;
+        }
+        else
+        {
+            m_tempRegister = 0;
+            m_writeCounter = 0;
+            m_modePRG = 3;
+            calculatePRGPointers();
         }
     }
 }
