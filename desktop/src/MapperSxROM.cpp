@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-21 16:08:26
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-03-11 15:46:22
+ * @LastEditTime: 2023-03-14 16:08:44
  * @FilePath: \oceannes\desktop\src\MapperSxROM.cpp
  * @Description: 注释信息
  */
@@ -165,9 +165,14 @@ std::uint8_t MapperSxROM ::readCHR(std::uint16_t addr)
         /* code */
         return m_characterRAM[addr];
     }
+    else if (addr < 0x1000)
+    {
+        /* code */
+        return *(m_firstBankCHR + addr);
+    }
     else
     {
-        return m_cartridge.getVROM()[addr];
+        return *(m_secondBankCHR + (addr & 0xfff));
     }
 }
 
@@ -187,4 +192,23 @@ void MapperSxROM::writeCHR(std::uint16_t addr, std::uint8_t value)
 NameTableMirroring MapperSxROM::getNameTableMirroring()
 {
     return m_mirroing;
+}
+
+void MapperSxROM::calculatePRGPointers()
+{
+    if (m_modePRG <= 1)
+    {
+        m_firstBankPRG = &m_cartridge.getROM()[0x4000 * (m_regPRG & ~1)];
+        m_secondBankPRG = m_firstBankPRG + 0x4000;
+    }
+    else if (m_modePRG == 2)
+    {
+        m_firstBankPRG = &m_cartridge.getROM()[0];
+        m_secondBankPRG = m_firstBankPRG + 0x4000 * m_regPRG;
+    }
+    else
+    {
+        m_firstBankPRG = &m_cartridge.getROM()[0x4000 * m_regPRG];
+        m_secondBankPRG = &m_cartridge.getROM()[m_cartridge.getROM().size() - 0x4000];
+    }
 }

@@ -28,6 +28,8 @@ public:
     void writeCHR(std::uint16_t addr, std::uint8_t value);
     std::uint8_t readCHR(std::uint16_t addr);
 
+    NameTableMirroring getNameTableMirroring();
+    
     ~MapperColorDreams();
 };
 

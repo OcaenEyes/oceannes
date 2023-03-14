@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-15 23:55:34
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-16 00:16:12
- * @FilePath: /oceannes/desktop/include/PUU.h
+ * @LastEditTime: 2023-03-14 19:39:21
+ * @FilePath: \oceannes\desktop\include\PPU.h
  * @Description: 注释信息
  */
 #if !defined(PPU_H)
@@ -24,7 +24,7 @@ const int FrameEndScanline = 261;
 
 const int AttributeOffset = 0x3c0;
 
-class PUU
+class PPU
 {
 private:
     /* data */
@@ -87,7 +87,7 @@ private:
     std::vector<std::vector<sf::Color>> m_pictureBuffer;
 
 public:
-    PUU(PictureBus &bus, VirtualScreen &screen);
+    PPU(PictureBus &bus, VirtualScreen &screen);
 
     void step();
     void reset();
@@ -113,7 +113,7 @@ public:
 
     void setOAMData(std::uint8_t value);
 
-    ~PUU();
+    ~PPU();
 };
 
 #endif // PPU_H
