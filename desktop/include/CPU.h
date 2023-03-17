@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-14 19:05:43
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-17 19:27:51
+ * @LastEditTime: 2023-03-17 19:39:11
  * @FilePath: /oceannes/desktop/include/CPU.h
  * @Description: 注释信息
  */
@@ -31,7 +31,7 @@ private:
     std::uint8_t pullStack();
 
     // If a and b are in different pages, increases the m_SkipCycles by inc
-    void setPageCrossed();
+    void setPageCrossed(std::uint16_t a, std::uint16_t b, int inc);
     void setZN(std::uint8_t value);
 
     int m_skipCycles;

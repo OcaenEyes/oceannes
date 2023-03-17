@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-15 01:06:32
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-18 09:59:41
+ * @LastEditTime: 2023-03-17 17:43:11
  * @FilePath: /oceannes/desktop/include/MainBus.h
  * @Description: 注释信息
  */
@@ -24,7 +24,7 @@ enum IORegisters
     OAMADDR,
     OAMDATA,
     PPUSCROL,
-    PPUADDA,
+    PPUADDR,
     PPUDATA,
     OAMDMA = 0x4014,
     JOY1 = 0x4016,
