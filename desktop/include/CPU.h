@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-14 19:05:43
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-03-17 19:39:11
+ * @LastEditTime: 2023-03-24 13:27:17
  * @FilePath: /oceannes/desktop/include/CPU.h
  * @Description: 注释信息
  */
@@ -18,12 +18,12 @@ private:
     /* data */
     void interruptSequence(InterruptType type);
 
-    void executeImplied();
-    void executeBranch();
+    bool executeImplied(std::uint8_t opcode);
+    bool executeBranch(std::uint8_t opcode);
 
-    bool executeType0();
-    bool executeType1();
-    bool executeType2();
+    bool executeType0(std::uint8_t opcode);
+    bool executeType1(std::uint8_t opcode);
+    bool executeType2(std::uint8_t opcode);
 
     std::uint16_t readAddress(std::uint16_t addr);
 

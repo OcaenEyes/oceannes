@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-14 19:06:34
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-15 00:27:35
+ * @LastEditTime: 2023-03-24 13:53:48
  * @FilePath: /oceannes/desktop/include/CPUOpcodes.h
  * @Description: 注释信息
  */
@@ -96,7 +96,7 @@ enum OperationImplied
     BRK = 0x00,
     JSR = 0x20,
     RTI = 0x40,
-    RTs = 0x60,
+    RTS = 0x60,
 
     JMP = 0x4c,
     JMPI = 0x6c,

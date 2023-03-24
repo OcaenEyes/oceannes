@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-14 19:05:48
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-03-17 19:38:11
+ * @LastEditTime: 2023-03-24 13:57:22
  * @FilePath: /oceannes/desktop/src/CPU.cpp
  * @Description: 注释信息
  */
@@ -115,6 +115,173 @@ void CPU::setZN(std::uint8_t value)
     f_N = value & 0x80;
 }
 
-void CPU::setPageCrossed(std::uint16_t a, std::uint16_t b, int inc){
+void CPU::setPageCrossed(std::uint16_t a, std::uint16_t b, int inc)
+{
+    m_skipCycles += 513;
+    m_skipCycles += (m_cycles & 1);
+}
+
+void CPU::step()
+{
+    ++m_cycles;
+    if (m_skipCycles-- > 1)
+    {
+        /* code */
+        return;
+    }
+
+    m_skipCycles = 0;
+
+    if (m_pendingNMI)
+    {
+        /* code */
+        interruptSequence(NMI);
+        m_pendingNMI = m_pendingIRQ = false;
+        return;
+    }
+    else if (m_pendingIRQ)
+    {
+        interruptSequence(IRQ);
+        m_pendingNMI = m_pendingIRQ = false;
+        return;
+    }
+
+    int psw = f_N << 7 | f_V << 6 | 1 << 5 | f_D << 3 | f_I << 2 | f_Z << 1 | f_C;
+
+    LOG_CPU << std::hex << std::setfill('0') << std::uppercase
+            << std::setw(4) << +r_PC
+            << "  "
+            << "A:" << std::setw(2) << +r_A << " "
+            << "X:" << std::setw(2) << +r_X << " "
+            << "Y:" << std::setw(2) << +r_Y << " "
+            << "P:" << std::setw(2) << +psw << " "
+            << "SP:" << std::setw(2) << +r_SP << " "
+            << "CYC:" << std::setw(3) << std::setfill(' ') << std::dec << ((m_cycles - 1) * 3) % 341
+            << std::endl;
+
+    std::uint8_t opcode = m_bus.read(r_PC++);
+    auto CycleLength = OperationCycles[opcode];
+
+    if (CycleLength && (executeImplied(opcode) || executeBranch(opcode) || executeType0(opcode) || executeType1(opcode) || executeType2(opcode)))
+    {
+        /* code */
+        m_skipCycles += CycleLength;
+    }
+    else
+    {
+        LOG(Error) << "unrecognized opcode" << std::hex << +opcode << std::endl;
+    }
+}
+
+bool CPU::executeImplied(std::uint8_t opcode)
+{
+    switch (static_cast<OperationImplied>(opcode))
+    {
+    case NOP:
+        /* code */
+        break;
+    case BRK:
+        interruptSequence(BRK_);
+        break;
+    case JSR:
+        pushStack(static_cast<std::uint8_t>((r_PC + 1) >> 8));
+        pushStack(static_cast<std::uint8_t>(r_PC + 1));
+        r_PC = readAddress(r_PC);
+        break;
+    case RTS:
+        r_PC = pullStack();
+        r_PC |= pullStack() << 8;
+        ++r_PC;
+        break;
+    case RTI:
+        break;
+    case JMP:
+        break;
+    case JMPI:
+    {
+    }
+    break;
+    case PHP:
+        break;
+
+    case PLP:
+        break;
+
+    case PHA:
+        break;
+
+    case PLA:
+        break;
+
+    case DEY:
+        break;
+
+    case DEX:
+        break;
+
+    case TAY:
+        break;
+
+    case INY:
+        break;
+
+    case INX:
+        break;
+
+    case CLC:
+        break;
+
+    case SEC:
+        break;
+
+    case CLI:
+        break;
+
+    case SEI:
+        break;
+
+    case CLD:
+        break;
+
+    case SED:
+        break;
+
+    case TYA:
+        break;
+
+    case CLV:
+        break;
+
+    case TXA:
+        break;
+
+    case TXS:
+        break;
+        
     
+    case TAX:
+        break;
+
+    case TSX:
+        break;
+
+    default:
+        break;
+    }
+}
+
+bool CPU::executeBranch(std::uint8_t opcode)
+{
+}
+
+bool CPU::executeType0(std::uint8_t opcode)
+{
+}
+
+bool CPU::executeType1(std::uint8_t opcode)
+{
+}
+
+bool CPU::executeType2(std::uint8_t opcode)
+{
 }

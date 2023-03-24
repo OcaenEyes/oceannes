@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-12 00:12:48
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-02-18 10:06:59
+ * @LastEditTime: 2023-03-24 11:38:08
  * @FilePath: /oceannes/desktop/include/LogUtil.h
  * @Description: 注释信息
  */
@@ -19,7 +19,17 @@
 #define __FILENAME__ __FILE__
 #endif
 
-#define LOG(level) if (level > LogUtil::get().getLevel()); else  LogUtil::get().getLogStream() << '[' << __FILENAME__ << ":" << std::dec << __LINE__ << "] "
+#define LOG(level)                         \
+    if (level > LogUtil::get().getLevel()) \
+        ;                                  \
+    else                                   \
+        LogUtil::get().getLogStream() << '[' << __FILENAME__ << ":" << std::dec << __LINE__ << "] "
+
+#define LOG_CPU                                \
+    if (CpuTrace != LogUtil::get().getLevel()) \
+        ;                                      \
+    else                                       \
+        LogUtil::get().getCpuTraceStream()
 
 enum LogLevel
 {
