@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2023-02-14 19:05:48
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2023-03-24 13:57:22
- * @FilePath: /oceannes/desktop/src/CPU.cpp
+ * @LastEditTime: 2023-03-26 22:05:22
+ * @FilePath: \oceannes\desktop\src\CPU.cpp
  * @Description: 注释信息
  */
 #include "CPU.h"
@@ -194,15 +194,41 @@ bool CPU::executeImplied(std::uint8_t opcode)
         ++r_PC;
         break;
     case RTI:
+    {
+        std::uint8_t flags = pullStack();
+        f_N = flags & 0x80;
+        f_V = flags & 0x40;
+        f_D = flags & 0x8;
+        f_I = flags & 0x4;
+        f_Z = flags & 0x2;
+        f_C = flags & 0x1;
+    }
+        r_PC = pullStack();
+        r_PC = pullStack() << 8;
         break;
     case JMP:
+        r_PC = readAddress(r_PC);
         break;
     case JMPI:
     {
+        std::uint16_t location = readAddress(r_PC);
+        std::uint16_t Page = location & 0xff00;
+        r_PC = m_bus.read(location) | m_bus.read(Page | ((location + 1) & 0xff)) << 8;
     }
     break;
     case PHP:
-        break;
+    {
+        std::uint8_t flags = f_N << 7 |
+                             f_V << 6 |
+                             1 << 5 |
+                             1 << 4 |
+                             f_D << 3 |
+                             f_I << 2 |
+                             f_Z << 1 |
+                             f_C;
+        pushStack(flags);
+    }
+    break;
 
     case PLP:
         break;
@@ -257,8 +283,7 @@ bool CPU::executeImplied(std::uint8_t opcode)
 
     case TXS:
         break;
-        
-    
+
     case TAX:
         break;
 
