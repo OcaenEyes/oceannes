@@ -2,7 +2,8 @@
 
 #include <vector>
 #include <string>
-#include <cstdint>
+
+#include "Chip.h"
 
 /**
  * cartridge: 卡带
@@ -13,8 +14,6 @@
  * 模拟可不考虑 Trainer 段
  *
  */
-using Byte = std::uint8_t;
-using Address = std::uint16_t;
 
 class Cartridge
 {

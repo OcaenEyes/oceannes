@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:06
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-19 20:02:48
+ * @LastEditTime: 2024-01-20 05:25:55
  * @FilePath: /vdesktop/src/Cartridge.cc
  * @Description: 注释信息
  */
@@ -73,8 +73,76 @@ bool Cartridge::LoadFromFile(std::string path)
     std::vector<Byte> header;
     if (!rom_file.read(reinterpret_cast<char *>(&header[0]), 0x10))
     {
-        /* code */
+        LOG(ERROR) << "reading nes header failed!\n";
+        return false;
     }
 
-    return false;
+    if (std::string{&header[0], &header[4]} != "NES\x1A")
+    {
+        LOG(ERROR) << "not a valid nes image, magic number: " << std::hex << header[0] << " " << header[1] << " " << header[2] << " " << int(header[3]) << "\n"
+                   << "valid magic number: N E S 1a\n";
+        return false;
+    }
+    LOG(INFO) << "reading header, it dictates: \n -*----------------------*-\n";
+
+    Byte banks = header[4];
+    LOG(INFO) << "16KB PRG-ROM Banks: " << +banks << "\n";
+    if (!banks)
+    {
+        LOG(ERROR) << "ROM has no PRG-ROM banks, loading ROM failed. " << +banks << "\n";
+        return false;
+    }
+
+    // video banks
+    Byte vbanks = header[5];
+    LOG(INFO) << "8KB CHR-ROM Banks: " << +vbanks << "\n";
+
+    // name table mirroring
+    m_name_TableMirroring = header[6] & 0xB;
+    LOG(INFO) << "Name Table Mirroring: " << +m_name_TableMirroring << "\n";
+
+    // mapper number
+    m_mapper_number = ((header[6] >> 4) & 0xf) | (header[7] & 0xf0);
+    LOG(INFO) << "Mapper number #: " << +m_mapper_number << "\n";
+
+    m_extended_RAM = header[6] & 0x2;
+    LOG(INFO) << "Extended (CPU) RAM " << std::boolalpha << m_extended_RAM << "\n";
+
+    // 暂不支持  使用Trainer格式的 .nes文件
+    if (header[6] & 0x4)
+    {
+        LOG(ERROR) << "PAL ROM not supported.\n";
+        return false;
+    }
+    else
+    {
+        LOG(INFO) << " ROM is NTSC compatible.\n";
+    }
+
+    // PRG-ROM 16KB banks
+    // 将0x4000(16KB)  * banks 内容写入到 m_PRG_ROM中
+    m_PRG_ROM.resize(0x4000 * banks);
+    if (!rom_file.read(reinterpret_cast<char *>(&m_PRG_ROM[0]), 0x4000 * banks))
+    {
+        LOG(ERROR) << "reading PRG-ROM from image file failed!\n";
+        return false;
+    }
+
+    // CHR-ROM 8KB banks
+    if (vbanks)
+    {
+        m_CHR_ROM.resize(0x2000 * vbanks);
+        if (!rom_file.read(reinterpret_cast<char *>(&m_CHR_ROM[0]), 0x2000 * vbanks))
+        {
+            LOG(ERROR) << "reading CHR-ROM from image file failed!\n";
+            return false;
+        }
+    }
+    else
+    {
+        LOG(INFO) << "Cartridge with CHR-RAM." << std::endl;
+    }
+
+    LOG(INFO) << "-*---------------------------*-\n";
+    return true;
 }
