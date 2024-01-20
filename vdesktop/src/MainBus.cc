@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:29
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 14:19:23
+ * @LastEditTime: 2024-01-20 16:29:24
  * @FilePath: \vdesktop\src\MainBus.cc
  * @Description: 注释信息
  */
@@ -70,13 +70,55 @@ Byte MainBus::Read(Address addr)
         // PPU 寄存器 映射到了总线上
         // 位于 $2000-$2007 , 另一个寄存器用于直接内存访问， 定制为$4014
         // 位置$2000-$2007 在 $2008-$3FFF区域中，每8个字节镜像一次
-        auto it = m_read_callbacks.find(static_cast<IORegisters>(addr & 0x2007));
-        if (it != m_read_callbacks.end())
+        if (addr < 0x4000)
         {
-            // it->second 保存了Read函数的对象
+            // IO 寄存器的读写使用map来实现
+            auto it = m_read_callbacks.find(static_cast<IORegisters>(addr & 0x2007));
+            if (it != m_read_callbacks.end())
+            {
+                // it->second 保存了Read函数的对象
+                return (it->second)();
+            }
+            else
+            {
+                LOG(INFO) << "No read callback registered for I/O register at:" << std::hex << +addr << "\n";
+            }
         }
-        
+        else if (addr < 0x4018 && addr >= 0x4014)
+        {
+            auto it = m_read_callbacks.find(static_cast<IORegisters>(addr));
+            if (it != m_read_callbacks.end())
+            {
+                // it->second 保存了Read函数的对象
+                return (it->second)();
+            }
+            else
+            {
+                LOG(INFO) << "No read callback registered for I/O register at:" << std::hex << +addr << "\n";
+            }
+        }
+        else
+        {
+            LOG(INFO) << "Read access attempt at:" << std::hex << +addr << "\n";
+        }
     }
+    else if (addr < 0x6000)
+    {
+        LOG(INFO) << "Expansion ROM access attempted, which is unsupported.\n";
+    }
+    else if (addr < 0x8000)
+    {
+        if (m_mapper->HasExtendedRAM())
+        {
+            return m_extended_RAM[addr - 0x6000];
+        }
+    }
+    else
+    {
+        return m_mapper->ReadPRG(addr);
+    }
+
+    return 0;
 }
 
 /**
@@ -87,6 +129,56 @@ Byte MainBus::Read(Address addr)
  */
 void MainBus::Write(Address addr, Byte value)
 {
+    if (addr < 0x2000)
+    {
+        m_extended_RAM[addr & 0x7ff] = value;
+    }
+    else if (addr < 0x4020)
+    {
+        if (addr < 0x4000) // PPU registers ,mirrored
+        {
+            auto it = m_write_callbacks.find(static_cast<IORegisters>(addr & 0x2007));
+            if (it != m_write_callbacks.end())
+            {
+                (it->second)(value);
+            }
+            else
+            {
+                LOG(INFO) << "No write callback registered for I/O register at:" << std::hex << +addr << "\n";
+            }
+        }
+        else if (addr < 0x4017 && addr >= 0x4014)
+        {
+            auto it = m_write_callbacks.find(static_cast<IORegisters>(addr));
+            if (it != m_write_callbacks.end())
+            {
+                (it->second)(value);
+            }
+            else
+            {
+                LOG(INFO) << "No write callback registered for I/O register at:" << std::hex << +addr << "\n";
+            }
+        }
+        else
+        {
+            LOG(INFO) << "Write access attempt at:" << std::hex << +addr << "\n";
+        }
+    }
+    else if (addr < 0x6000)
+    {
+        LOG(INFO) << "Expansion ROM access attempted, which is unsupported.\n";
+    }
+    else if (addr < 0x8000)
+    {
+        if (m_mapper->HasExtendedRAM())
+        {
+            m_extended_RAM[addr - 0x6000] = value;
+        }
+    }
+    else
+    {
+        m_mapper->WritePRG(addr, value);
+    }
 }
 
 /**
@@ -109,7 +201,7 @@ const Byte *MainBus::GetPagePtr(Byte page)
     }
     else if (addr < 0x6000)
     {
-        LOG(ERROR) << "Register ROM access attempted, which is unsupported.\n";
+        LOG(ERROR) << "Expansion ROM access attempted, which is unsupported.\n";
     }
     else if (addr < 0x8000)
     {

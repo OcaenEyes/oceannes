@@ -2,11 +2,12 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:35
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 05:15:49
- * @FilePath: /vdesktop/src/Mapper.cc
+ * @LastEditTime: 2024-01-20 16:35:05
+ * @FilePath: \vdesktop\src\Mapper.cc
  * @Description: 注释信息
  */
 #include "Mapper.h"
+#include "MapperNROM.h"
 
 Mapper::Mapper(Cartridge &cart, MapperType t) : m_cartridge(cart), m_type(t)
 {
@@ -24,5 +25,20 @@ inline bool Mapper::HasExtendedRAM()
 
 std::unique_ptr<Mapper> Mapper::CreateMapper(MapperType t, Cartridge &cart, std::function<void(void)> mirroring_cb)
 {
-    return std::unique_ptr<Mapper>();
+    std::unique_ptr<Mapper> ret(nullptr);
+    switch (t)
+    {
+    case NROM:
+        ret.reset(new MapperNROM(cart));
+        break;
+    case SxROM:
+        break;
+    case UxROM:
+        break;
+    case CNROM:
+        break;
+    default:
+        break;
+    }
+    return ret;
 }
