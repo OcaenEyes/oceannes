@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:12:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 09:18:52
- * @FilePath: /vdesktop/include/MainBus.h
+ * @LastEditTime: 2024-01-20 14:09:00
+ * @FilePath: \vdesktop\include\MainBus.h
  * @Description: 注释信息
  */
 #pragma once
@@ -42,9 +42,22 @@ private:
     std::vector<Byte> m_extended_RAM; // 扩展RAM
 
     Mapper *m_mapper;
-    std::map<>
+    std::map<IORegisters, std::function<void(Byte)>> m_write_callbacks;
+    std::map<IORegisters, std::function<Byte(void)>> m_read_callbacks;
 
 public:
     MainBus(/* args */);
     ~MainBus();
+
+    bool SetMapper(Mapper *mapper);
+
+    Byte Read(Address addr);
+    void Write(Address addr, Byte value);
+
+    const Byte *GetPagePtr(Byte page);
+
+    // IO 寄存器读写
+    //  提供一个抽象接口，交由对应的硬件模块提供函数获得相应的寄存器值
+    bool SetWriteCallback(IORegisters reg, std::function<void(Byte)> callback);
+    bool SetReadCallback(IORegisters reg, std::function<Byte(void)> callback);
 };
