@@ -54,3 +54,9 @@ V: Vs. Unisystem标志位. 被设置则表示为Vs.  游戏
 x: 未使用
 
 ```
+
+
+## 第三方库 SFML2.6.0
+https://www.sfml-dev.org/download/sfml/2.6.0/
+
+
