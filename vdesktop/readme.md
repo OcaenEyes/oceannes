@@ -1,3 +1,11 @@
+<!--
+ * @Author: OCEAN.GZY
+ * @Date: 2024-01-20 11:54:07
+ * @LastEditors: OCEAN.GZY
+ * @LastEditTime: 2024-01-21 11:08:20
+ * @FilePath: \vdesktop\readme.md
+ * @Description: 注释信息
+-->
 # OCEANNES
 
 ## 名词解释
@@ -58,5 +66,6 @@ x: 未使用
 
 ## 第三方库 SFML2.6.0
 https://www.sfml-dev.org/download/sfml/2.6.0/
-
+- windows: mingw64-13.1.0 + gcc-sfml 2.6.0
+- mac: sfml 2.6.0
 

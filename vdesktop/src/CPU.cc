@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:28:34
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 19:01:57
- * @FilePath: /vdesktop/src/CPU.cc
+ * @LastEditTime: 2024-01-21 14:26:01
+ * @FilePath: \vdesktop\src\CPU.cc
  * @Description: 注释信息
  */
 #include "CPU.h"
@@ -41,23 +41,71 @@ void CPU::Reset()
 
 void CPU::Reset(Address start_addr)
 {
+    m_skip_cycles = m_cylces = 0;
+    r_A = r_X = r_Y = 0;
+    f_I = true;
+
+    f_C = f_D = f_N = f_V = f_Z = false;
+    r_PC = start_addr;
+
+    r_SP = 0xfd;
 }
 
 void CPU::SkipDMACycles()
 {
+    m_skip_cycles += 513;            // 256 read + 256 write + 1 dummy read
+    m_skip_cycles += (m_cylces & 1); // +1 if on odd cycle
 }
 
 void CPU::Step()
 {
+    ++m_cylces;
+    if (m_skip_cycles-- > 1)
+    {
+        return;
+    }
+
+    m_skip_cycles = 0;
+    // 生成程序状态字
+    Byte opcode = m_bus.Read(r_PC++);
+    auto CycleLength = OperationCycles[opcode];
+
+    if (CycleLength && (ExecuteImplied(opcode) || ExecuteBranch(opcode) ||
+                        ExecuteType0(opcode) || ExecuteType1(opcode) || ExecuteType2(opcode)))
+    {
+        m_skip_cycles += CycleLength;
+    }
 }
 
 Address CPU::GetPC()
 {
-    return Address();
+    return r_PC;
 }
 
 void CPU::Interrupt(InterruptType t)
 {
+    if (f_I && t != NMI && t != BRK_)
+    {
+        return;
+    }
+
+    if (t == BRK_) // add one if BRK , a quirk of 6502
+    {
+        ++r_PC;
+    }
+
+    // 保存PC 值
+    PushStack(r_PC >> 8);
+    PushStack(r_PC);
+
+    Byte flags = f_N << 7 | f_V << 6 | 1 << 5 // unused bit , supposed to be always 1
+                 | (t == BRK_) << 4 |         // B flag set if BRK
+                 f_D << 3 |
+                 f_I << 2 |
+                 f_Z << 1 | f_C;
+
+                 // 保存状态
+                 PushStack(flags);
 }
 
 // 内存addr处， 保持着一个地址信息
@@ -95,6 +143,11 @@ bool CPU::ExecuteType2(Byte opcode)
 
 void CPU::SetPageCrossed(Address a, Address b, int inc)
 {
+    //  Page is determined by the high byte
+    if ((a & 0xff00) != (b & 0xff00))
+    {
+        m_skip_cycles += inc;
+    }
 }
 
 // 从内存的栈中读/写数据

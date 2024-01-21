@@ -7,10 +7,13 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 set(THIRD_DIR ${PROJECT_SOURCE_DIR}/thirds)
 
+# 使用指定的文件
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(SFML_DIR ${THIRD_DIR}/SFML/windows-vs/SFML-2.6.0)
+    message(${CMAKE_SYSTEM_NAME})
+    set(SFML_DIR ${THIRD_DIR}/SFML/windows-gcc/SFML-2.6.0/lib/cmake/SFML)
+    message(${SFML_DIR})
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(SFML_DIR ${THIRD_DIR}/SFML/mac/SFML-2.6.0)
+    set(SFML_DIR ${THIRD_DIR}/SFML/mac/SFML-2.6.0/lib/cmake/SFML)
 endif()
 
 #  network
