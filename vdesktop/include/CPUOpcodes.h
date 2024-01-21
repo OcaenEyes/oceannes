@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:12:24
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 14:48:29
- * @FilePath: /vdesktop/include/CPUOpcodes.h
+ * @LastEditTime: 2024-01-21 22:49:58
+ * @FilePath: \vdesktop\include\CPUOpcodes.h
  * @Description: 注释信息
  */
 #pragma once
@@ -27,7 +27,7 @@ const auto AddrModeShift = 2;
 const auto BranchInstructionMask = 0x1f; // 0001 --- 1111
 const auto BranchInstructionMaskResult = 0x10;
 const auto BranchConditionMask = 0x20;
-const auto BranchFlagShift = 6;
+const auto BranchOnFlagShift = 6;
 
 // 6502 CPU 操作码相关定义
 // 复位向量地址， 当CPU复位时， CPU将从此处地址开始取值执行
@@ -129,7 +129,7 @@ enum AddressingMode1
     Immediate, // 立即数寻址
     Absolute,  // 绝对值寻址
     IndirectY, // 寄存器间接寻址
-    IndirectX, // 寄存器间接寻址
+    IndexedX, // 寄存器间接寻址
     AbsoluteY,
     AbsoluteX,
 };
