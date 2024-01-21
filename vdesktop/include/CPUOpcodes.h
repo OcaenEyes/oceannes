@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:12:24
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 09:42:48
- * @FilePath: \vdesktop\include\CPUOpcodes.h
+ * @LastEditTime: 2024-01-21 14:48:29
+ * @FilePath: /vdesktop/include/CPUOpcodes.h
  * @Description: 注释信息
  */
 #pragma once
@@ -87,8 +87,9 @@ enum Operation2
 enum OperationImplied
 {
     NOP = 0xea,
+    
     JSR = 0x20,
-    RII = 0x40,
+    RTI = 0x40,
     RTS = 0x60,
 
     JMP = 0x4c,
