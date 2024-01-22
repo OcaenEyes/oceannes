@@ -79,7 +79,7 @@ Byte PictureBus::Read(Address addr)
             return m_RAM[m_name_table3 + index];
         }
     }
-    else if (addr < 0x3ffff)
+    else if (addr < 0x3fff)
     {
         /* 0x3f00 - 0x3f20 */
         // 分为image 和 sprite，每个 palette 大小为16

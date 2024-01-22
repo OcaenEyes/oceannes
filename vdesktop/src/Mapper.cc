@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:35
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 16:35:05
- * @FilePath: \vdesktop\src\Mapper.cc
+ * @LastEditTime: 2024-01-22 15:30:53
+ * @FilePath: /vdesktop/src/Mapper.cc
  * @Description: 注释信息
  */
 #include "Mapper.h"
@@ -18,7 +18,7 @@ NameTableMirroring Mapper::GetNameTableMirroring()
     return static_cast<NameTableMirroring>(m_cartridge.GetNameTableMirroring());
 }
 
-inline bool Mapper::HasExtendedRAM()
+bool Mapper::HasExtendedRAM()
 {
     return m_cartridge.HasExtendedRAM();
 }

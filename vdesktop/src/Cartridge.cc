@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:06
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 05:25:55
+ * @LastEditTime: 2024-01-22 18:03:59
  * @FilePath: /vdesktop/src/Cartridge.cc
  * @Description: 注释信息
  */
@@ -71,6 +71,8 @@ bool Cartridge::LoadFromFile(std::string path)
 
     // 读取.nes的 header
     std::vector<Byte> header;
+    header.resize(0x10);
+
     if (!rom_file.read(reinterpret_cast<char *>(&header[0]), 0x10))
     {
         LOG(ERROR) << "reading nes header failed!\n";
@@ -110,6 +112,12 @@ bool Cartridge::LoadFromFile(std::string path)
 
     // 暂不支持  使用Trainer格式的 .nes文件
     if (header[6] & 0x4)
+    {
+        LOG(ERROR) << "PAL ROM not supported.\n";
+        return false;
+    }
+
+    if ((header[0xA] & 0x3) == 0x2 || (header[0xA] & 0x1))
     {
         LOG(ERROR) << "PAL ROM not supported.\n";
         return false;

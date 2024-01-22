@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:25:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 05:13:27
+ * @LastEditTime: 2024-01-22 15:30:58
  * @FilePath: /vdesktop/include/Mapper.h
  * @Description: 注释信息
  */
@@ -73,7 +73,7 @@ public:
 
     virtual NameTableMirroring GetNameTableMirroring();
 
-    bool inline HasExtendedRAM();
+    bool HasExtendedRAM();
 
     static std::unique_ptr<Mapper> CreateMapper(MapperType t, Cartridge &cart, std::function<void(void)> mirroring_cb = nullptr);
 

@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:25:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 23:10:24
- * @FilePath: \vdesktop\include\PPU.h
+ * @LastEditTime: 2024-01-22 11:37:52
+ * @FilePath: /vdesktop/include/PPU.h
  * @Description: 注释信息
  */
 #pragma once
@@ -48,7 +48,7 @@ public:
     Byte GetOAMData();
 
     void SetScroll(Byte scroll);
-    void Scroll(Byte ctl);
+    void Control(Byte ctl);
 
     void DoDMA(const Byte *page_ptr);
 
@@ -73,7 +73,7 @@ private:
 
     int m_cycle;
     int m_scanline;
-    bool event_frame;
+    bool m_even_frame;
 
     bool m_vblank;
     bool m_spr_zreo_hit;
