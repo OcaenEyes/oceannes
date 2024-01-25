@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:17
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 19:38:52
+ * @LastEditTime: 2024-01-25 10:55:47
  * @FilePath: /vdesktop/src/PictureBus.cc
  * @Description: 注释信息
  */
@@ -134,24 +134,24 @@ void PictureBus::UpdateMirroring()
     case Horizontal: // 横
         m_name_table0 = m_name_table1 = 0;
         m_name_table2 = m_name_table3 = 0x400;
-        LOG(INFO) << "Horizontal Name table mirroing";
+        LOG_INFO("Horizontal Name table mirroing");
         break;
     case Vertical: // 竖
         m_name_table0 = m_name_table2 = 0;
         m_name_table1 = m_name_table3 = 0x400;
-        LOG(INFO) << "Vertical Name table mirroing";
+        LOG_INFO("Vertical Name table mirroing");
         break;
     case OneScreenLower:
         m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0;
-        LOG(INFO) << "Single Screen mirroring set with lower bank.";
+        LOG_INFO("Single Screen mirroring set with lower bank.");
         break;
     case OneScreenHigher:
         m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0x400;
-        LOG(INFO) << "Single Screen mirroring set with higher bank.";
+        LOG_INFO("Single Screen mirroring set with higher bank.");
         break;
     default:
         m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0;
-        LOG(ERROR) << "Unsupported name table mirroring.";
+        LOG_ERROR("Unsupported name table mirroring.");
         break;
     }
 }
@@ -160,7 +160,7 @@ bool PictureBus::SetMapper(Mapper *mapper)
 {
     if (!mapper)
     {
-        LOG(ERROR) << "Mapper argument is nullptr.";
+        LOG_ERROR("Mapper argument is nullptr.");
         return false;
     }
     m_mapper = mapper;

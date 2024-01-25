@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:28:34
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 22:50:30
- * @FilePath: \vdesktop\src\CPU.cc
+ * @LastEditTime: 2024-01-25 16:09:58
+ * @FilePath: /vdesktop/src/CPU.cc
  * @Description: 注释信息
  */
 #include "CPU.h"
@@ -98,11 +98,14 @@ void CPU::Interrupt(InterruptType t)
     PushStack(r_PC >> 8);
     PushStack(r_PC);
 
-    Byte flags = f_N << 7 | f_V << 6 | 1 << 5 // unused bit , supposed to be always 1
-                 | (t == BRK_) << 4 |         // B flag set if BRK
+    Byte flags = f_N << 7 |
+                 f_V << 6 |
+                 1 << 5 |           // unused bit , supposed to be always 1
+                 (t == BRK_) << 4 | // B flag set if BRK
                  f_D << 3 |
                  f_I << 2 |
-                 f_Z << 1 | f_C;
+                 f_Z << 1 |
+                 f_C;
 
     // 保存状态
     PushStack(flags);

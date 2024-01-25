@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:24:50
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 20:05:46
+ * @LastEditTime: 2024-01-25 10:57:12
  * @FilePath: /vdesktop/include/Log.h
  * @Description: 注释信息
  */
@@ -14,15 +14,25 @@
     if (level <= Log::GetInstance().get_level()) \
     Log::GetInstance().get_log_stream() << '[' << __FILE__ << ':' << std::dec << __LINE__ << ']'
 
-#define LOG_INFO(logformat, ...)                        \
+#define LOG_INFO(logmsgformat, ...)                     \
     do                                                  \
     {                                                   \
         Log &log = Log::GetInstance();                  \
-        log.set_log_level(INFO);                        \
+        log.set_level(INFO);                            \
         char c[1024] = {0};                             \
         snprintf(c, 1024, logmsgformat, ##__VA_ARGS__); \
         log.PLog(c);                                    \
-    } while {0};
+    } while (0);
+
+#define LOG_ERROR(logmsgformat, ...)                    \
+    do                                                  \
+    {                                                   \
+        Log &log = Log::GetInstance();                  \
+        log.set_level(ERROR);                           \
+        char c[1024] = {0};                             \
+        snprintf(c, 1024, logmsgformat, ##__VA_ARGS__); \
+        log.PLog(c);                                    \
+    } while (0);
 
 enum LogLevel
 {

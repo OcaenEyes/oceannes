@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:23
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 15:31:36
+ * @LastEditTime: 2024-01-25 19:59:55
  * @FilePath: /vdesktop/src/PPU.cc
  * @Description: 注释信息
  */
@@ -38,6 +38,7 @@ void PPU::Reset()
     m_pipeline_state = PreRender;
     m_scanline_sprites.reserve(8);
     m_scanline_sprites.resize(0);
+
 }
 
 void PPU::Step()
@@ -67,6 +68,7 @@ void PPU::Step()
             m_pipeline_state = Render;
             m_cycle = m_scanline = 0;
         }
+
         break;
     case Render:
         if (m_cycle > 0 && m_cycle <= ScanlineVisibleDots)
@@ -98,7 +100,7 @@ void PPU::Step()
                     bg_opaque = bg_color; // flag used to caculate final pixel with the sprite pixel
 
                     // fetch attribute and caculate the higher two bits of palette
-                    addr = 0x23c0 | (m_data_address & 0xC00) | ((m_data_address >> 4) & 0x38) | ((m_data_address >> 2) & 0x07);
+                    addr = 0x23C0 | (m_data_address & 0xC00) | ((m_data_address >> 4) & 0x38) | ((m_data_address >> 2) & 0x07);
 
                     auto attribute = Read(addr);
                     int shift = ((m_data_address >> 4) & 4) | (m_data_address & 2);
@@ -120,6 +122,7 @@ void PPU::Step()
                         m_data_address += 1; // increment coarse X
                     }
                 }
+
             }
 
             if (m_show_sprites && (!m_hide_edge_sprites || x >= 8))
@@ -170,7 +173,7 @@ void PPU::Step()
                     spr_color |= (Read(addr) >> (x_shift)) & 1;            // bit 0 of palette entry
                     spr_color |= ((Read(addr + 8) >> (x_shift)) & 1) << 1; // bit 1
 
-                    if (!(spr_opaque == spr_color))
+                    if (!(spr_opaque = spr_color))
                     {
                         spr_color = 0;
                         continue;
@@ -187,6 +190,7 @@ void PPU::Step()
 
                     break; // Exit the loop now since we've found the highest priority sprite
                 }
+
             }
 
             Byte palette_addr = bg_color;
@@ -201,6 +205,7 @@ void PPU::Step()
             }
 
             m_picture_buffer[x][y] = sf::Color(colors[m_bus.ReadPalette(palette_addr)]);
+
         }
         else if (m_cycle == ScanlineVisibleDots + 1 && m_show_background)
         {
@@ -315,7 +320,7 @@ void PPU::Step()
 
         break;
     default:
-        LOG(ERROR) << "Well, this shouldn't have happened." << std::endl;
+        LOG_ERROR("Well, this shouldn't have happened.");
     }
     ++m_cycle;
 }
@@ -332,6 +337,7 @@ void PPU::SetMask(Byte mask)
     m_hide_edge_sprites = !(mask & 0x4);
     m_show_background = mask & 0x8;
     m_show_sprites = mask & 0x10;
+
 }
 
 Byte PPU::GetStatus()
@@ -339,6 +345,7 @@ Byte PPU::GetStatus()
     Byte status = m_spr_zreo_hit << 6 | m_vblank << 7;
     m_vblank = false;
     m_first_write = true;
+
     return status;
 }
 
@@ -376,6 +383,7 @@ Byte PPU::GetData()
         // Return from the data buffer and store the current value in the buffer
         std::swap(data, m_data_buffer);
     }
+
     return data;
 }
 

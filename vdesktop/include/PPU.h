@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:25:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 11:37:52
+ * @LastEditTime: 2024-01-25 16:20:41
  * @FilePath: /vdesktop/include/PPU.h
  * @Description: 注释信息
  */
@@ -22,7 +22,7 @@ const int ScanlineVisibleDots = 256;
 const int VisibleScanlines = 240;
 
 const int FrameEndScanline = 261;
-const int AttrbiuteOffset = 0x3c0;
+const int AttrbiuteOffset = 0x3C0;
 
 class PPU
 {
@@ -112,3 +112,4 @@ private:
     std::vector<std::vector<sf::Color>> m_picture_buffer;
 
 };
+

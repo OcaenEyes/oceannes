@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 05:40:05
+ * @LastEditTime: 2024-01-25 11:16:11
  * @FilePath: /vdesktop/src/MapperNROM.cc
  * @Description: 注释信息
  */
@@ -21,11 +21,11 @@ MapperNROM::MapperNROM(Cartridge &cart) : Mapper(cart, Mapper::NROM)
     {
         m_use_character_RAM = true;
         m_character_RAM.resize(0x2000);
-        LOG(INFO) << "Use character RAM\n";
+        LOG_INFO("Use character RAM");
     }
     else
     {
-        LOG(INFO) << "Use CHR-ROM\n";
+        LOG_INFO("Use CHR-ROM");
         m_use_character_RAM = false;
     }
 }
@@ -36,7 +36,7 @@ MapperNROM::~MapperNROM()
 
 void MapperNROM::WritePRG(Address addr, Byte value)
 {
-    LOG(INFO) << "ROM memory write attempt at " << +addr << " to set " << +value << "\n";
+    LOG_INFO("ROM memory write attempt at %d  to set %d", +addr, +value);
 }
 
 Byte MapperNROM::ReadPRG(Address addr)
@@ -59,7 +59,7 @@ void MapperNROM::WriteCHR(Address addr, Byte value)
     }
     else
     {
-        LOG(INFO) << "Read-only CHR memory write attempt at " << std::hex << addr << "\n";
+        LOG_INFO("Read-only CHR memory write attempt at %s %hu", std::hex, addr);
     }
 }
 

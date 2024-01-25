@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 15:05:54
+ * @LastEditTime: 2024-01-25 14:18:22
  * @FilePath: /vdesktop/src/Emulator.cc
  * @Description: 注释信息
  */
@@ -76,7 +76,29 @@ Emulator::Emulator() : m_cpu(m_bus),
         !m_bus.SetReadCallback(OAMDATA, [&](void)
                                { return m_ppu.GetOAMData(); }))
     {
-        LOG(ERROR) << "Critical error: Failed to set I/O callbacks \n";
+        LOG_ERROR("Critical error: Failed to set I/O callbacks");
+    }
+
+    if (!m_bus.SetWriteCallback(PPUCTL, [&](Byte b)
+                                { m_ppu.Control(b); }) ||
+        !m_bus.SetWriteCallback(PPUMASK, [&](Byte b)
+                                { m_ppu.SetMask(b); }) ||
+        !m_bus.SetWriteCallback(OAMADDR, [&](Byte b)
+                                { m_ppu.SetOAMAddress(b); }) ||
+        !m_bus.SetWriteCallback(PPUADDR, [&](Byte b)
+                                { m_ppu.SetDataAddress(b); }) ||
+        !m_bus.SetWriteCallback(PPUSCROL, [&](Byte b)
+                                { m_ppu.SetScroll(b); }) ||
+        !m_bus.SetWriteCallback(PPUDATA, [&](Byte b)
+                                { m_ppu.SetData(b); }) ||
+        !m_bus.SetWriteCallback(OAMDMA, [&](Byte b)
+                                { DMA(b); }) ||
+        !m_bus.SetWriteCallback(JOY1, [&](Byte b)
+                                { m_controller1.Write(b); m_controller2.Write(b); }) ||
+        !m_bus.SetWriteCallback(OAMDATA, [&](Byte b)
+                                { m_ppu.SetOAMData(b); }))
+    {
+        LOG_ERROR("Critical error: Failed to set I/O callbacks");
     }
 
     // ppu 设置中断回调函数
@@ -94,7 +116,7 @@ void Emulator::Run(std::string rom_path)
 {
     if (!m_cartridge.LoadFromFile(rom_path))
     {
-        LOG(ERROR) << "Unable to laod ROM file from :" << rom_path << "\n";
+        LOG_ERROR("Unable to laod ROM file from : %s", rom_path.c_str());
         return;
     }
 
@@ -102,7 +124,7 @@ void Emulator::Run(std::string rom_path)
 
     if (!m_mapper)
     {
-        LOG(ERROR) << "Creating Mapper failed. Probably unsupported.\n";
+        LOG_ERROR("Creating Mapper failed. Probably unsupported.");
         return;
     }
 
@@ -111,7 +133,6 @@ void Emulator::Run(std::string rom_path)
     {
         return;
     }
-
     m_cpu.Reset();
     m_ppu.Reset();
 
@@ -123,8 +144,8 @@ void Emulator::Run(std::string rom_path)
     m_cycle_timer = std::chrono::high_resolution_clock::now();
     m_elapsed_time = m_cycle_timer - m_cycle_timer;
     sf::Event event;
-
     bool is_focus = true, is_pause = false;
+
     while (m_window.isOpen())
     {
         while (m_window.pollEvent(event))
@@ -164,7 +185,6 @@ void Emulator::Run(std::string rom_path)
                 }
             }
         }
-
         if (is_focus && !is_pause)
         {
             m_elapsed_time += std::chrono::high_resolution_clock::now() - m_cycle_timer;
@@ -182,15 +202,18 @@ void Emulator::Run(std::string rom_path)
 
                 m_elapsed_time -= m_cpu_cycle_duration;
             }
-
+            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
             m_window.draw(m_emulator_screen);
             m_window.display();
+            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
         }
         else
         {
             // 1/60 second
             sf::sleep(sf::microseconds(1000 / 60));
+            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
         }
+        // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
     }
 }
 

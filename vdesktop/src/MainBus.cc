@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:29
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-20 16:29:24
- * @FilePath: \vdesktop\src\MainBus.cc
+ * @LastEditTime: 2024-01-25 14:16:54
+ * @FilePath: /vdesktop/src/MainBus.cc
  * @Description: 注释信息
  */
 #include "MainBus.h"
@@ -22,7 +22,7 @@ bool MainBus::SetMapper(Mapper *mapper)
 {
     if (mapper == nullptr)
     {
-        LOG(ERROR) << "Mapper point is nullptr\n";
+        LOG_ERROR("Mapper point is nullptr");
         return false;
     }
     m_mapper = mapper;
@@ -81,7 +81,7 @@ Byte MainBus::Read(Address addr)
             }
             else
             {
-                LOG(INFO) << "No read callback registered for I/O register at:" << std::hex << +addr << "\n";
+                LOG_INFO("No read callback registered for I/O register at: %s %d", std::hex, +addr);
             }
         }
         else if (addr < 0x4018 && addr >= 0x4014)
@@ -94,17 +94,17 @@ Byte MainBus::Read(Address addr)
             }
             else
             {
-                LOG(INFO) << "No read callback registered for I/O register at:" << std::hex << +addr << "\n";
+                LOG_INFO("No read callback registered for I/O register at: %s %d", std::hex, +addr);
             }
         }
         else
         {
-            LOG(INFO) << "Read access attempt at:" << std::hex << +addr << "\n";
+            LOG_INFO("Read access attempt at: %s %d", std::hex, +addr);
         }
     }
     else if (addr < 0x6000)
     {
-        LOG(INFO) << "Expansion ROM access attempted, which is unsupported.\n";
+        LOG_INFO("Expansion ROM access attempted, which is unsupported.");
     }
     else if (addr < 0x8000)
     {
@@ -131,7 +131,7 @@ void MainBus::Write(Address addr, Byte value)
 {
     if (addr < 0x2000)
     {
-        m_extended_RAM[addr & 0x7ff] = value;
+        m_RAM[addr & 0x7ff] = value;
     }
     else if (addr < 0x4020)
     {
@@ -144,7 +144,7 @@ void MainBus::Write(Address addr, Byte value)
             }
             else
             {
-                LOG(INFO) << "No write callback registered for I/O register at:" << std::hex << +addr << "\n";
+                LOG_INFO("No write callback registered for I/O register at: %s %d line: %d", std::hex, +addr, __LINE__);
             }
         }
         else if (addr < 0x4017 && addr >= 0x4014)
@@ -156,17 +156,17 @@ void MainBus::Write(Address addr, Byte value)
             }
             else
             {
-                LOG(INFO) << "No write callback registered for I/O register at:" << std::hex << +addr << "\n";
+                LOG_INFO("No write callback registered for I/O register at: %s %d line: %d", std::hex, +addr, __LINE__);
             }
         }
         else
         {
-            LOG(INFO) << "Write access attempt at:" << std::hex << +addr << "\n";
+            LOG_INFO("Write access attempt at: %s %c", std::hex, +addr);
         }
     }
     else if (addr < 0x6000)
     {
-        LOG(INFO) << "Expansion ROM access attempted, which is unsupported.\n";
+        LOG_INFO("Expansion ROM access attempted, which is unsupported.");
     }
     else if (addr < 0x8000)
     {
@@ -197,11 +197,11 @@ const Byte *MainBus::GetPagePtr(Byte page)
     }
     else if (addr < 0x4020)
     {
-        LOG(ERROR) << "Register address memory pointer access attempt.\n";
+        LOG_ERROR("Register address memory pointer access attempt.");
     }
     else if (addr < 0x6000)
     {
-        LOG(ERROR) << "Expansion ROM access attempted, which is unsupported.\n";
+        LOG_ERROR("Expansion ROM access attempted, which is unsupported.");
     }
     else if (addr < 0x8000)
     {
@@ -217,7 +217,7 @@ bool MainBus::SetWriteCallback(IORegisters reg, std::function<void(Byte)> callba
 {
     if (!callback)
     {
-        LOG(ERROR) << "write callback argument is nullptr\n";
+        LOG_ERROR("write callback argument is nullptr");
         return false;
     }
     return m_write_callbacks.emplace(reg, callback).second;
@@ -227,7 +227,7 @@ bool MainBus::SetReadCallback(IORegisters reg, std::function<Byte(void)> callbac
 {
     if (!callback)
     {
-        LOG(ERROR) << "read callback argument is nullptr\n";
+        LOG_ERROR("read callback argument is nullptr");
         return false;
     }
     return m_read_callbacks.emplace(reg, callback).second;

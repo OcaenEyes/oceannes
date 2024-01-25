@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:36
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 12:12:03
- * @FilePath: \vdesktop\src\VirtualScreen.cc
+ * @LastEditTime: 2024-01-25 14:48:21
+ * @FilePath: /vdesktop/src/VirtualScreen.cc
  * @Description: 注释信息
  */
 #include "VirtualScreen.h"
@@ -32,16 +32,15 @@ void VirtualScreen::Create(unsigned int width, unsigned int height, float pixel_
     // 像素大小
     m_pixel_size = pixel_size;
 
-    for (std::size_t i = 0; i < width; i++)
+    for (std::size_t x = 0; x < width; ++x)
     {
-        for (std::size_t k = 0; k < height; k++)
+        for (std::size_t y = 0; y < height; ++y)
         {
-            auto index = (i * m_screen_size.y + k) * 6;
+            // 神坑， 之前这边没注意乘6
+            auto index = (x * m_screen_size.y + y) * 6;
             // float 型 二元组
-            sf::Vector2f coord2d(i * m_pixel_size, k * m_pixel_size);
-
-            // Triangle-1
-            //  上左
+            sf::Vector2f coord2d(x * m_pixel_size, y * m_pixel_size);
+            // 上左
             m_vertices[index].position = coord2d;
             m_vertices[index].color = color;
 
@@ -53,16 +52,15 @@ void VirtualScreen::Create(unsigned int width, unsigned int height, float pixel_
             m_vertices[index + 2].position = coord2d + sf::Vector2f{m_pixel_size, m_pixel_size};
             m_vertices[index + 2].color = color;
 
-            // Triangle-2
-            //  下右
+            // bottom-right
             m_vertices[index + 3].position = coord2d + sf::Vector2f{m_pixel_size, m_pixel_size};
             m_vertices[index + 3].color = color;
 
-            // 下左
+            // bottom-left
             m_vertices[index + 4].position = coord2d + sf::Vector2f{0, m_pixel_size};
             m_vertices[index + 4].color = color;
 
-            // 上左
+            // top-left
             m_vertices[index + 5].position = coord2d;
             m_vertices[index + 5].color = color;
         }

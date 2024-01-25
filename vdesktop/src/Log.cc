@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:20
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-19 19:31:52
+ * @LastEditTime: 2024-01-25 10:43:39
  * @FilePath: /vdesktop/src/Log.cc
  * @Description: 注释信息
  */
@@ -20,6 +20,23 @@ Log &Log::GetInstance()
 {
     static Log instance;
     return instance;
+}
+
+void Log::PLog(std::string msg)
+{
+    time_t now = time(nullptr); // 获取当前时间
+    tm *now_tm = localtime(&now);
+
+    char time_buf[128];
+    sprintf(time_buf, "%d-%d-%d =>[%s] ",
+            now_tm->tm_hour,
+            now_tm->tm_min,
+            now_tm->tm_sec,
+            m_log_level == INFO ? "INFO" : "ERROR"); // 每行日志的时分秒
+
+    msg.insert(0, time_buf); // 在日志msg前面插入时分秒
+    msg.append("\n");        // 在末尾增加换行符
+    std::cout << msg;
 }
 
 void Log::set_log_stream(std::ostream &stream)
