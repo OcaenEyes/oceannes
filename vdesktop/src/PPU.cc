@@ -2,13 +2,15 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:23
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 19:59:55
- * @FilePath: /vdesktop/src/PPU.cc
+ * @LastEditTime: 2024-01-25 21:10:54
+ * @FilePath: \vdesktop\src\PPU.cc
  * @Description: 注释信息
  */
 #include "PPU.h"
 #include "Log.h"
 #include "PaletteColors.h"
+
+#include <cstring>
 
 /*
  * PPU的实现是NES模拟器最复杂的一部分
