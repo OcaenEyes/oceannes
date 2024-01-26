@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:17
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 10:55:47
+ * @LastEditTime: 2024-01-25 22:48:12
  * @FilePath: /vdesktop/src/PictureBus.cc
  * @Description: 注释信息
  */
@@ -152,7 +152,6 @@ void PictureBus::UpdateMirroring()
     default:
         m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0;
         LOG_ERROR("Unsupported name table mirroring.");
-        break;
     }
 }
 

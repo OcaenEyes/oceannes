@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:36
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 14:48:21
+ * @LastEditTime: 2024-01-26 10:10:54
  * @FilePath: /vdesktop/src/VirtualScreen.cc
  * @Description: 注释信息
  */
@@ -96,4 +96,5 @@ void VirtualScreen::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 {
     // Draw primitives defined by a vertex buffer.
     target.draw(m_vertices, states);
+    LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
 }

@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 14:18:22
+ * @LastEditTime: 2024-01-25 23:19:28
  * @FilePath: /vdesktop/src/Emulator.cc
  * @Description: 注释信息
  */
@@ -138,11 +138,10 @@ void Emulator::Run(std::string rom_path)
 
     m_window.create(sf::VideoMode(NESVideoWidth * m_screen_scale, NESVideoHeight * m_screen_scale), "OceanNes", sf::Style::Titlebar | sf::Style::Close);
     m_window.setVerticalSyncEnabled(true);
-
     m_emulator_screen.Create(NESVideoWidth, NESVideoHeight, m_screen_scale, sf::Color::White);
-
     m_cycle_timer = std::chrono::high_resolution_clock::now();
     m_elapsed_time = m_cycle_timer - m_cycle_timer;
+
     sf::Event event;
     bool is_focus = true, is_pause = false;
 

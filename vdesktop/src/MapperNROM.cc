@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 11:16:11
+ * @LastEditTime: 2024-01-25 22:49:55
  * @FilePath: /vdesktop/src/MapperNROM.cc
  * @Description: 注释信息
  */
@@ -15,6 +15,10 @@ MapperNROM::MapperNROM(Cartridge &cart) : Mapper(cart, Mapper::NROM)
     if (cart.GetRom().size() == 0x4000)
     {
         m_one_bank = true;
+    }
+    else
+    { // 2 banks
+        m_one_bank = false;
     }
     // 如果 CHR 为 0 的话，说明卡带上的 CHR 为 RAM 而非 ROM
     if (cart.GetVRom().size() == 0)
