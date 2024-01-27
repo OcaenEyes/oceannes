@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:17
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 22:48:12
+ * @LastEditTime: 2024-01-27 07:30:19
  * @FilePath: /vdesktop/src/PictureBus.cc
  * @Description: 注释信息
  */
@@ -90,6 +90,7 @@ Byte PictureBus::Read(Address addr)
 
 void PictureBus::Write(Address addr, Byte value)
 {
+    std::cout << "PictureBus::Write(Address addr, Byte value), addr is: " << addr << " value is: " << value << "\n";
     if (addr < 0x2000)
     {
         m_mapper->WriteCHR(addr, value);

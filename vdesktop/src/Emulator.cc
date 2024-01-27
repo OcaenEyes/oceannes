@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 23:19:28
+ * @LastEditTime: 2024-01-27 07:48:20
  * @FilePath: /vdesktop/src/Emulator.cc
  * @Description: 注释信息
  */
@@ -138,6 +138,11 @@ void Emulator::Run(std::string rom_path)
 
     m_window.create(sf::VideoMode(NESVideoWidth * m_screen_scale, NESVideoHeight * m_screen_scale), "OceanNes", sf::Style::Titlebar | sf::Style::Close);
     m_window.setVerticalSyncEnabled(true);
+
+    // sf::CircleShape shape(NESVideoWidth);
+    // // 颜色填充
+    // shape.setFillColor(sf::Color::Red);
+
     m_emulator_screen.Create(NESVideoWidth, NESVideoHeight, m_screen_scale, sf::Color::White);
     m_cycle_timer = std::chrono::high_resolution_clock::now();
     m_elapsed_time = m_cycle_timer - m_cycle_timer;
@@ -202,7 +207,7 @@ void Emulator::Run(std::string rom_path)
                 m_elapsed_time -= m_cpu_cycle_duration;
             }
             // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
-            m_window.draw(m_emulator_screen);
+            // m_window.draw(m_emulator_screen);
             m_window.display();
             // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
         }

@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:06
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 19:54:48
+ * @LastEditTime: 2024-01-27 07:46:14
  * @FilePath: /vdesktop/src/Cartridge.cc
  * @Description: 注释信息
  */
@@ -107,7 +107,7 @@ bool Cartridge::LoadFromFile(std::string path)
     LOG_INFO("Mapper number #: %d", +m_mapper_number);
 
     m_extended_RAM = header[6] & 0x2;
-    LOG_INFO("Extended (CPU) RAM  %s %s", std::boolalpha, m_extended_RAM);
+    // LOG_INFO("Extended (CPU) RAM  %s %s", std::boolalpha, m_extended_RAM);
 
     // 暂不支持  使用Trainer格式的 .nes文件
     if (header[6] & 0x4)
