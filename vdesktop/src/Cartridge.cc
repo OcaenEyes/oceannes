@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:06
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-27 07:46:14
+ * @LastEditTime: 2024-01-28 12:03:35
  * @FilePath: /vdesktop/src/Cartridge.cc
  * @Description: 注释信息
  */
@@ -11,39 +11,33 @@
 
 #include <fstream>
 
-Cartridge::Cartridge() : m_name_TableMirroring(0),
-                         m_mapper_number(0),
-                         m_extended_RAM(false)
+Cartridge::Cartridge() : m_nameTableMirroring(0),
+                         m_mapperNumber(0),
+                         m_extendedRAM(false)
 {
 }
-
-Cartridge::~Cartridge()
-{
-}
-
-const std::vector<Byte> &Cartridge::GetRom()
+const std::vector<Byte> &Cartridge::GetROM()
 {
     return m_PRG_ROM;
 }
-
-const std::vector<Byte> &Cartridge::GetVRom()
+const std::vector<Byte> &Cartridge::GetVROM()
 {
     return m_CHR_ROM;
 }
 
-bool Cartridge::HasExtendedRAM()
-{
-    return m_extended_RAM;
-}
-
 Byte Cartridge::GetMapper()
 {
-    return m_mapper_number;
+    return m_mapperNumber;
 }
 
 Byte Cartridge::GetNameTableMirroring()
 {
-    return m_name_TableMirroring;
+    return m_nameTableMirroring;
+}
+
+bool Cartridge::HasExtendedRAM()
+{
+    return m_extendedRAM;
 }
 
 /*
@@ -58,80 +52,80 @@ Byte Cartridge::GetNameTableMirroring()
  * 10: Flags 10 - TV system, PRG-RAM presence (unofficial, rarely used extension)
  * 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15
  */
-bool Cartridge::LoadFromFile(std::string path) 
+bool Cartridge::LoadFromFile(std::string path)
 {
-    std::ifstream rom_file(path, std::ios_base::binary | std::ios_base::in);
-    if (!rom_file)
+
+    std::ifstream romFile(path, std::ios_base::binary | std::ios_base::in);
+    if (!romFile)
     {
-        LOG_ERROR("can not open ROM file: %s", path.c_str());
+        LOG(Error) << "Could not open ROM file from path: " << path << std::endl;
         return false;
     }
 
-    LOG_INFO("reading ROM from : %s ", path.c_str());
+    LOG(Info) << "Reading ROM from path: " << path << std::endl;
 
-    // 读取.nes的 header
+    // 读取.NES文件中的 header
     std::vector<Byte> header;
     header.resize(0x10);
 
-    if (!rom_file.read(reinterpret_cast<char *>(&header[0]), 0x10))
+    if (!romFile.read(reinterpret_cast<char *>(&header[0]), 0x10))
     {
-        LOG_ERROR("reading nes header failed!");
+        LOG(Error) << "Reading iNES header failed." << std::endl;
         return false;
     }
 
     if (std::string{&header[0], &header[4]} != "NES\x1A")
     {
-        LOG_ERROR("not a valid nes image, magic number: %s %hhu %hhu  %hhu %d valid magic number: N E S 1a", std::hex, header[0], header[1], header[2], int(header[3]));
+        LOG(Error) << "Not a valid iNES image. Magic number: "
+                   << std::hex << header[0] << " "
+                   << header[1] << " " << header[2] << " " << int(header[3]) << std::endl
+                   << "Valid magic number : N E S 1a" << std::endl;
         return false;
     }
-    LOG_INFO("reading header, it dictates: \n -*----------------------*-\n");
+
+    LOG(Info) << "Reading header, it dictates: \n-*--*--*--*--*--*--*--*-\n";
 
     Byte banks = header[4];
-    LOG_INFO("16KB PRG-ROM Banks: %hhu", +banks);
+    LOG(Info) << "16KB PRG-ROM Banks: " << +banks << std::endl;
     if (!banks)
     {
-        LOG_ERROR("ROM has no PRG-ROM banks, loading ROM failed.");
+        LOG(Error) << "ROM has no PRG-ROM banks. Loading ROM failed." << std::endl;
         return false;
     }
-
-    // video banks
+    // vidio banks
     Byte vbanks = header[5];
-    LOG_INFO("8KB CHR-ROM Banks: %hhu", +vbanks);
+    LOG(Info) << "8KB CHR-ROM Banks: " << +vbanks << std::endl;
+    // nameTableMirroring
+    m_nameTableMirroring = header[6] & 0xB;
+    LOG(Info) << "Name Table Mirroring: " << +m_nameTableMirroring << std::endl;
+    // mapper Number
+    m_mapperNumber = ((header[6] >> 4) & 0xf) | (header[7] & 0xf0);
+    LOG(Info) << "Mapper number #: " << +m_mapperNumber << std::endl;
 
-    // name table mirroring
-    m_name_TableMirroring = header[6] & 0xB;
-    LOG_INFO("Name Table Mirroring: %d", +m_name_TableMirroring);
+    m_extendedRAM = header[6] & 0x2;
+    LOG(Info) << "Extended (CPU) RAM: " << std::boolalpha << m_extendedRAM << std::endl;
 
-    // mapper number
-    m_mapper_number = ((header[6] >> 4) & 0xf) | (header[7] & 0xf0);
-    LOG_INFO("Mapper number #: %d", +m_mapper_number);
-
-    m_extended_RAM = header[6] & 0x2;
-    // LOG_INFO("Extended (CPU) RAM  %s %s", std::boolalpha, m_extended_RAM);
-
-    // 暂不支持  使用Trainer格式的 .nes文件
+    // 模拟器暂不支持 使用 Trainer 格式的 .NES 文件
     if (header[6] & 0x4)
     {
-        LOG_ERROR("PAL ROM not supported.");
+        LOG(Error) << "Trainer is not supported." << std::endl;
         return false;
     }
 
     if ((header[0xA] & 0x3) == 0x2 || (header[0xA] & 0x1))
     {
-        LOG_ERROR("PAL ROM not supported.");
+        LOG(Error) << "PAL ROM not supported." << std::endl;
         return false;
     }
     else
-    {
-        LOG_INFO(" ROM is NTSC compatible.");
-    }
+        LOG(Info) << "ROM is NTSC compatible.\n";
 
     // PRG-ROM 16KB banks
-    // 将0x4000(16KB)  * banks 内容写入到 m_PRG_ROM中
+    //  将0x4000(16KB) * banks 内容写到 m_PGR_ROM 中
     m_PRG_ROM.resize(0x4000 * banks);
-    if (!rom_file.read(reinterpret_cast<char *>(&m_PRG_ROM[0]), 0x4000 * banks))
+    if (!romFile.read(reinterpret_cast<char *>(&m_PRG_ROM[0]), 0x4000 * banks))
     {
-        LOG_ERROR("reading PRG-ROM from image file failed!");
+        LOG(Error) << "Reading PRG-ROM from image file failed." << std::endl;
         return false;
     }
 
@@ -139,17 +133,16 @@ bool Cartridge::LoadFromFile(std::string path)
     if (vbanks)
     {
         m_CHR_ROM.resize(0x2000 * vbanks);
-        if (!rom_file.read(reinterpret_cast<char *>(&m_CHR_ROM[0]), 0x2000 * vbanks))
+        if (!romFile.read(reinterpret_cast<char *>(&m_CHR_ROM[0]), 0x2000 * vbanks))
         {
-            LOG_ERROR("reading CHR-ROM from image file failed!");
+            LOG(Error) << "Reading CHR-ROM from image file failed." << std::endl;
             return false;
         }
     }
     else
-    {
-        LOG_INFO("Cartridge with CHR-RAM.");
-    }
+        LOG(Info) << "Cartridge with CHR-RAM." << std::endl;
 
-    LOG_INFO("-*---------------------------*-");
+    LOG(Info) << "-*--*--*--*--*--*--*--*-\n"
+              << std::endl;
     return true;
 }

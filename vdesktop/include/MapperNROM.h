@@ -1,22 +1,28 @@
+/*
+ * @Author: OCEAN.GZY
+ * @Date: 2024-01-19 16:25:48
+ * @LastEditors: OCEAN.GZY
+ * @LastEditTime: 2024-01-28 12:01:28
+ * @FilePath: /vdesktop/include/MapperNROM.h
+ * @Description: 注释信息
+ */
 #pragma once
 
 #include "Mapper.h"
 
 class MapperNROM : public Mapper
 {
-private:
-    bool m_one_bank;
-    bool m_use_character_RAM;
-
-    std::vector<Byte> m_character_RAM;
-
 public:
     MapperNROM(Cartridge &cart);
-    ~MapperNROM();
-
     void WritePRG(Address addr, Byte value);
     Byte ReadPRG(Address addr);
 
-    void WriteCHR(Address addr, Byte value);
     Byte ReadCHR(Address addr);
+    void WriteCHR(Address addr, Byte value);
+
+private:
+    bool m_oneBank;
+    bool m_usesCharacterRAM;
+
+    std::vector<Byte> m_characterRAM;
 };

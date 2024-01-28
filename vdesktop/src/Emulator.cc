@@ -2,25 +2,23 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-27 07:48:20
+ * @LastEditTime: 2024-01-28 12:04:49
  * @FilePath: /vdesktop/src/Emulator.cc
  * @Description: 注释信息
  */
 #include "Emulator.h"
 #include "Log.h"
 
-/**
- * [Player 1]
- *
- * A = J
- * B = K
- * Select = RShift
- * Start = Return
- * Up = W
- * Down = S
- * Left = A
- * Right = D
- */
+/*
+A      = J
+B      = K
+Select = RShift
+Start  = Return
+Up     = W
+Down   = S
+Left   = A
+Right  = D
+*/
 std::vector<sf::Keyboard::Key> con_one = {
     sf::Keyboard::Key::J,
     sf::Keyboard::Key::K,
@@ -32,18 +30,17 @@ std::vector<sf::Keyboard::Key> con_one = {
     sf::Keyboard::Key::D,
 };
 
-/**
- * [Player 2]
- *
- * A = Numpad5
- * B = Numpad6
- * Select = Numpad8
- * Start = Numpad9
- * Up = Up
- * Down = Down
- * Left = Left
- * Right = Right
- */
+/*
+[Player2]
+A      = Numpad5
+B      = Numpad6
+Select = Numpad8
+Start  = Numpad9
+Up     = Up
+Down   = Down
+Left   = Left
+Right  = Right
+*/
 std::vector<sf::Keyboard::Key> con_two = {
     sf::Keyboard::Key::Numpad5,
     sf::Keyboard::Key::Numpad6,
@@ -54,15 +51,14 @@ std::vector<sf::Keyboard::Key> con_two = {
     sf::Keyboard::Key::Left,
     sf::Keyboard::Key::Right,
 };
-
 /*
- * 将 m_cpu_cycle_duration增大可方便调试
+ * 将 m_cpuCycleDuration增大可方便调试
  */
 Emulator::Emulator() : m_cpu(m_bus),
-                       m_screen_scale(2.f),
-                       m_ppu(m_picture_bus, m_emulator_screen),
-                       m_cycle_timer(),
-                       m_cpu_cycle_duration(std::chrono::nanoseconds(559))
+                       m_screenScale(2.f),
+                       m_ppu(m_pictureBus, m_emulatorScreen),
+                       m_cycleTimer(),
+                       m_cpuCycleDuration(std::chrono::nanoseconds(559))
 {
     // 855555559
     if (!m_bus.SetReadCallback(PPUSTATUS, [&](void)
@@ -76,10 +72,10 @@ Emulator::Emulator() : m_cpu(m_bus),
         !m_bus.SetReadCallback(OAMDATA, [&](void)
                                { return m_ppu.GetOAMData(); }))
     {
-        LOG_ERROR("Critical error: Failed to set I/O callbacks");
+        LOG(Error) << "Critical error: Failed to set I/O callbacks" << std::endl;
     }
 
-    if (!m_bus.SetWriteCallback(PPUCTL, [&](Byte b)
+    if (!m_bus.SetWriteCallback(PPUCTRL, [&](Byte b)
                                 { m_ppu.Control(b); }) ||
         !m_bus.SetWriteCallback(PPUMASK, [&](Byte b)
                                 { m_ppu.SetMask(b); }) ||
@@ -94,61 +90,56 @@ Emulator::Emulator() : m_cpu(m_bus),
         !m_bus.SetWriteCallback(OAMDMA, [&](Byte b)
                                 { DMA(b); }) ||
         !m_bus.SetWriteCallback(JOY1, [&](Byte b)
-                                { m_controller1.Write(b); m_controller2.Write(b); }) ||
+                                {m_controller1.Write(b); m_controller2.Write(b); }) ||
         !m_bus.SetWriteCallback(OAMDATA, [&](Byte b)
                                 { m_ppu.SetOAMData(b); }))
     {
-        LOG_ERROR("Critical error: Failed to set I/O callbacks");
+        LOG(Error) << "Critical error: Failed to set I/O callbacks" << std::endl;
     }
-
     // ppu 设置中断回调函数
     m_ppu.SetInterruptCallback([&]()
                                { m_cpu.Interrupt(CPU::NMI); });
     m_controller1.SetKeyBindings(con_one);
     m_controller2.SetKeyBindings(con_two);
 }
-
-Emulator::~Emulator()
-{
-}
-
 void Emulator::Run(std::string rom_path)
 {
     if (!m_cartridge.LoadFromFile(rom_path))
     {
-        LOG_ERROR("Unable to laod ROM file from : %s", rom_path.c_str());
+        LOG(Error) << "Unable to load ROM from file:" << rom_path << std::endl;
         return;
     }
 
-    m_mapper = Mapper::CreateMapper(static_cast<Mapper::MapperType>(m_cartridge.GetMapper()), m_cartridge);
+    m_mapper = Mapper::CreateMapper(static_cast<Mapper::Type>(m_cartridge.GetMapper()),
+                                    m_cartridge);
 
     if (!m_mapper)
     {
-        LOG_ERROR("Creating Mapper failed. Probably unsupported.");
+        LOG(Error) << "Creating Mapper failed. Probably unsupported." << std::endl;
         return;
     }
-
+    /* 待添加PPU总线的mapper设置 */
     if (!m_bus.SetMapper(m_mapper.get()) ||
-        !m_picture_bus.SetMapper(m_mapper.get()))
+        !m_pictureBus.SetMapper(m_mapper.get()))
     {
         return;
     }
+
     m_cpu.Reset();
     m_ppu.Reset();
 
-    m_window.create(sf::VideoMode(NESVideoWidth * m_screen_scale, NESVideoHeight * m_screen_scale), "OceanNes", sf::Style::Titlebar | sf::Style::Close);
+    m_window.create(sf::VideoMode(NESVideoWidth * m_screenScale, NESVideoHeight * m_screenScale),
+                    "MyNES", sf::Style::Titlebar | sf::Style::Close);
     m_window.setVerticalSyncEnabled(true);
-
     // sf::CircleShape shape(NESVideoWidth);
-    // // 颜色填充
+    // 颜色填充
     // shape.setFillColor(sf::Color::Red);
+    m_emulatorScreen.Create(NESVideoWidth, NESVideoHeight, m_screenScale, sf::Color::White);
 
-    m_emulator_screen.Create(NESVideoWidth, NESVideoHeight, m_screen_scale, sf::Color::White);
-    m_cycle_timer = std::chrono::high_resolution_clock::now();
-    m_elapsed_time = m_cycle_timer - m_cycle_timer;
-
+    m_cycleTimer = std::chrono::high_resolution_clock::now();
+    m_elapsedTime = m_cycleTimer - m_cycleTimer;
     sf::Event event;
-    bool is_focus = true, is_pause = false;
+    bool isFocus = true, isPause = false;
 
     while (m_window.isOpen())
     {
@@ -161,24 +152,20 @@ void Emulator::Run(std::string rom_path)
             }
             else if (event.type == sf::Event::GainedFocus)
             {
-                is_focus = true;
-                m_cycle_timer = std::chrono::high_resolution_clock::now();
+                isFocus = true;
+                m_cycleTimer = std::chrono::high_resolution_clock::now();
             }
             else if (event.type == sf::Event::LostFocus)
-            {
-                is_focus = false;
-            }
+                isFocus = false;
             else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F2)
             {
-                is_pause = !is_pause;
-                if (!is_pause)
-                {
-                    m_cycle_timer = std::chrono::high_resolution_clock::now();
-                }
+                isPause = !isPause;
+                if (!isPause)
+                    m_cycleTimer = std::chrono::high_resolution_clock::now();
             }
-            else if (is_pause && event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::F3)
+            else if (isPause && event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::F3)
             {
-                for (int i = 0; i < 29781; i++) // Around one frame
+                for (int i = 0; i < 29781; ++i) // Around one frame
                 {
                     // PPU
                     m_ppu.Step();
@@ -189,35 +176,31 @@ void Emulator::Run(std::string rom_path)
                 }
             }
         }
-        if (is_focus && !is_pause)
-        {
-            m_elapsed_time += std::chrono::high_resolution_clock::now() - m_cycle_timer;
-            m_cycle_timer = std::chrono::high_resolution_clock::now();
 
+        if (isFocus && !isPause)
+        {
+            m_elapsedTime += std::chrono::high_resolution_clock::now() - m_cycleTimer;
+            m_cycleTimer = std::chrono::high_resolution_clock::now();
             // 上次执行的时间大于一个CPU周期
-            while (m_elapsed_time > m_cpu_cycle_duration)
+            while (m_elapsedTime > m_cpuCycleDuration)
             {
-                // PPU
+                // 为什么是 3:1？
                 m_ppu.Step();
                 m_ppu.Step();
                 m_ppu.Step();
-                // CPU
+
                 m_cpu.Step();
 
-                m_elapsed_time -= m_cpu_cycle_duration;
+                m_elapsedTime -= m_cpuCycleDuration;
             }
-            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
-            // m_window.draw(m_emulator_screen);
+            m_window.draw(m_emulatorScreen);
             m_window.display();
-            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
         }
         else
         {
             // 1/60 second
-            sf::sleep(sf::microseconds(1000 / 60));
-            // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
+            sf::sleep(sf::milliseconds(1000 / 60));
         }
-        // LOG_INFO("运行到这里了 %s %d", __FUNCTION__, __LINE__);
     }
 }
 

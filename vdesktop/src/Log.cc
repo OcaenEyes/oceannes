@@ -2,70 +2,79 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:20
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 21:09:03
- * @FilePath: \vdesktop\src\Log.cc
+ * @LastEditTime: 2024-01-28 12:05:08
+ * @FilePath: /vdesktop/src/Log.cc
  * @Description: 注释信息
  */
 #include "Log.h"
 #include <ctime>
 
-Log::Log() : m_log_level(INFO)
-{
-}
-
 Log::~Log()
 {
 }
 
-Log &Log::GetInstance()
+Log &Log::get()
 {
     static Log instance;
     return instance;
 }
 
-void Log::PLog(std::string msg)
+std::ostream &Log::getCpuTraceStream()
 {
-    time_t now = time(nullptr); // 获取当前时间
-    tm *now_tm = localtime(&now);
-
-    char time_buf[128];
-    sprintf(time_buf, "%d-%d-%d =>[%s] ",
-            now_tm->tm_hour,
-            now_tm->tm_min,
-            now_tm->tm_sec,
-            m_log_level == INFO ? "INFO" : "ERROR"); // 每行日志的时分秒
-
-    msg.insert(0, time_buf); // 在日志msg前面插入时分秒
-    msg.append("\n");        // 在末尾增加换行符
-    std::cout << msg;
+    return *m_cpuTrace;
+}
+std::ostream &Log::getStream()
+{
+    return *m_logStream;
 }
 
-void Log::set_log_stream(std::ostream &stream)
+void Log::setLogStream(std::ostream &stream)
 {
-    m_log_stream = &stream;
+    m_logStream = &stream;
 }
 
-void Log::set_cpu_trace_stream(std::ostream &stream)
+void Log::setCpuTraceStream(std::ostream &stream)
 {
-    m_cpu_trace_stream = &stream;
+    m_cpuTrace = &stream;
 }
 
-std::ostream &Log::get_log_stream()
+Log &Log::setLevel(Level level)
 {
-    return *m_log_stream;
+    m_logLevel = level;
+    return *this;
 }
 
-std::ostream &Log::get_cpu_trace_stream()
+Level Log::getLevel()
 {
-    return *m_cpu_trace_stream;
+    return m_logLevel;
 }
 
-void Log::set_level(LogLevel level)
+TeeBuf::TeeBuf(std::streambuf *sb1, std::streambuf *sb2) : m_sb1(sb1),
+                                                           m_sb2(sb2)
 {
-    m_log_level = level;
+}
+int TeeBuf::overflow(int c)
+{
+    if (c == EOF)
+    {
+        return !EOF;
+    }
+    else
+    {
+        int const r1 = m_sb1->sputc(c);
+        int const r2 = m_sb2->sputc(c);
+        return r1 == EOF || r2 == EOF ? EOF : c;
+    }
 }
 
-LogLevel Log::get_level()
+int TeeBuf::sync()
 {
-    return m_log_level;
+    int const r1 = m_sb1->pubsync();
+    int const r2 = m_sb2->pubsync();
+    return r1 == 0 && r2 == 0 ? 0 : -1;
+}
+
+TeeStream::TeeStream(std::ostream &o1, std::ostream &o2) : std::ostream(&m_tbuf),
+                                                           m_tbuf(o1.rdbuf(), o2.rdbuf())
+{
 }

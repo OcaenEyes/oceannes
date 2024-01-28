@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-20 11:54:07
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-21 12:30:03
- * @FilePath: \vdesktop\include\Controller.h
+ * @LastEditTime: 2024-01-28 11:56:23
+ * @FilePath: /vdesktop/include/Controller.h
  * @Description: 注释信息
  */
 #pragma once
@@ -15,15 +15,9 @@
 
 class Controller
 {
-private:
-    bool m_strobe;
-    unsigned int m_button_states;
-
-    // sfml库的 key类型绑定各个按键
-    std::vector<sf::Keyboard::Key> m_key_bindings;
-
 public:
-    enum Buttion
+    Controller();
+    enum Buttons
     {
         A,
         B,
@@ -33,16 +27,17 @@ public:
         Down,
         Left,
         Right,
-        TotalButtons
+        TotalButtons,
     };
-
-    Controller(/* args */);
-    ~Controller();
-
     void Write(Byte b);
-    // 获取各个按键状态
+    /* 获取各个按键的状态 */
     Byte Read();
-
-    // 映射到红白机的 各个button的关系
+    /* 映射键盘到红黄机各个button的关系 */
     void SetKeyBindings(const std::vector<sf::Keyboard::Key> &keys);
+
+private:
+    bool m_strobe;
+    unsigned int m_buttonStates;
+    // sfml 库的 key 类型绑定各个按键
+    std::vector<sf::Keyboard::Key> m_keyBindings;
 };

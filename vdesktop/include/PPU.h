@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:25:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 16:20:41
+ * @LastEditTime: 2024-01-28 12:02:34
  * @FilePath: /vdesktop/include/PPU.h
  * @Description: 注释信息
  */
@@ -16,52 +16,43 @@
 
 const int ScanlineCycleLength = 341;
 const int ScanlineEndCycle = 340;
-
-// NES图像分辨率 256 * 240(长*宽)
+// NES 图像分辨率为 256 x 240（长 x 宽）
 const int ScanlineVisibleDots = 256;
 const int VisibleScanlines = 240;
-
 const int FrameEndScanline = 261;
-const int AttrbiuteOffset = 0x3C0;
+const int AttributeOffset = 0x3C0;
 
 class PPU
 {
-
 public:
     PPU(PictureBus &bus, VirtualScreen &screen);
-    ~PPU();
 
     void Reset();
     void Step();
     void SetInterruptCallback(std::function<void(void)> cb);
-    // OAM (object attribute memory)
+    /*OAM (Object Attribute Memory) */
 
     void SetMask(Byte mask);
     Byte GetStatus();
     void SetDataAddress(Byte addr);
-
-    void SetData(Byte data);
     Byte GetData();
-
+    void SetData(Byte data);
+    Byte GetOAMData();
+    void Control(Byte ctrl);
     void SetOAMAddress(Byte addr);
     void SetOAMData(Byte value);
-    Byte GetOAMData();
-
     void SetScroll(Byte scroll);
-    void Control(Byte ctl);
-
     void DoDMA(const Byte *page_ptr);
 
 private:
     Byte Read(Address addr);
     Byte ReadOAM(Byte addr);
     void WriteOAM(Byte addr, Byte value);
-
     PictureBus &m_bus;
     VirtualScreen &m_screen;
 
-    std::vector<Byte> m_sprite_memory;
-    std::vector<Byte> m_scanline_sprites;
+    std::vector<Byte> m_spriteMemory;
+    std::vector<Byte> m_scanlineSprites;
 
     enum PipelineState
     {
@@ -69,47 +60,43 @@ private:
         Render,
         PostRender,
         VerticalBlank
-    } m_pipeline_state;
+    } m_pipelineState;
 
     int m_cycle;
     int m_scanline;
-    bool m_even_frame;
+    bool m_evenFrame;
 
     bool m_vblank;
-    bool m_spr_zreo_hit;
-
+    bool m_sprZeroHit;
     // v blank 消隐
-    std::function<void(void)> m_vblank_callback;
-
+    std::function<void(void)> m_vblankCallback;
     // 寄存器
-    Address m_data_address;
-    Address m_temp_address;
-
-    Byte m_fine_x_sroll;
-    bool m_first_write;
-
-    Byte m_data_buffer;
-    Byte m_sprite_data_address;
-
+    Address m_dataAddress;
+    Address m_tempAddress;
+    Byte m_fineXScroll;
+    bool m_firstWrite;
+    Byte m_dataBuffer;
+    Byte m_spriteDataAddress;
     // Flags and variables
-    bool m_long_sprites;
-    bool m_generate_interrupt;
-    bool m_greyscale_mode;
-    bool m_show_sprites;
-    bool m_show_background;
-    bool m_hide_edge_sprites;
-    bool m_hide_edge_background;
 
-    enum CharacterPage{
+    bool m_longSprites;
+    bool m_generateInterrupt;
+    bool m_greyscaleMode;
+    bool m_showSprites;
+    bool m_showBackground;
+    bool m_hideEdgeSprites;
+    bool m_hideEdgeBackground;
+
+    enum CharacterPage
+    {
         Low,
-        High
-    } m_bg_page, m_spr_page;
+        High,
+    } m_bgPage,
+        m_sprPage;
 
-    Address m_data_addr_increment;
+    Address m_dataAddrIncrement;
 
-    // 存颜色的vector 的vector
+    // 存颜色的vector 的 vector
     // picture 缓存
-    std::vector<std::vector<sf::Color>> m_picture_buffer;
-
+    std::vector<std::vector<sf::Color>> m_pictureBuffer;
 };
-

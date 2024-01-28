@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:28:34
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 16:09:58
+ * @LastEditTime: 2024-01-28 12:04:29
  * @FilePath: /vdesktop/src/CPU.cc
  * @Description: 注释信息
  */
@@ -10,6 +10,8 @@
 #include "Cartridge.h"
 #include "Log.h"
 #include "CPUOpcodes.h"
+
+/* CPU 6502 */
 
 /*
 参考：中文版 http://nesdev.com/nes_c.txt
@@ -29,7 +31,6 @@ CPU Memory Map
  2kB Internal RAM, mirrored 4 times     2KB的内部RAM，做4次镜象
 --------------------------------------- $0000
 */
-
 CPU::CPU(MainBus &mem) : m_bus(mem)
 {
 }
@@ -38,80 +39,51 @@ void CPU::Reset()
 {
     Reset(ReadAddress(ResetVector));
 }
-
-void CPU::Reset(Address start_addr)
+/* 内存addr处保存着一个地址信息 */
+Address CPU::ReadAddress(Address addr)
 {
-    m_skip_cycles = m_cylces = 0;
-    r_A = r_X = r_Y = 0;
-    f_I = true;
-
-    f_C = f_D = f_N = f_V = f_Z = false;
-    r_PC = start_addr;
-
-    r_SP = 0xfd;
+    return m_bus.Read(addr) | m_bus.Read(addr + 1) << 8;
+}
+/*
+ * 从内存的栈中读/写数据
+ */
+void CPU::PushStack(Byte val)
+{
+    m_bus.Write(0x100 | r_SP, val);
+    --r_SP; /**/
 }
 
-void CPU::SkipDMACycles()
+Byte CPU::PullStack()
 {
-    m_skip_cycles += 513;            // 256 read + 256 write + 1 dummy read
-    m_skip_cycles += (m_cylces & 1); // +1 if on odd cycle
+    return m_bus.Read(0x100 | ++r_SP);
 }
 
-void CPU::Step()
+void CPU::Interrupt(InterruptType type)
 {
-    ++m_cylces;
-    if (m_skip_cycles-- > 1)
-    {
+    if (f_I && type != NMI && type != BRK_)
         return;
-    }
 
-    m_skip_cycles = 0;
-    // 生成程序状态字
-    Byte opcode = m_bus.Read(r_PC++);
-    auto CycleLength = OperationCycles[opcode];
-
-    if (CycleLength && (ExecuteImplied(opcode) || ExecuteBranch(opcode) ||
-                        ExecuteType0(opcode) || ExecuteType1(opcode) || ExecuteType2(opcode)))
-    {
-        m_skip_cycles += CycleLength;
-    }
-}
-
-Address CPU::GetPC()
-{
-    return r_PC;
-}
-
-void CPU::Interrupt(InterruptType t)
-{
-    if (f_I && t != NMI && t != BRK_)
-    {
-        return;
-    }
-
-    if (t == BRK_) // add one if BRK , a quirk of 6502
-    {
+    if (type == BRK_) // Add one if BRK, a quirk of 6502
         ++r_PC;
-    }
 
-    // 保存PC 值
+    // 保存 PC 值
     PushStack(r_PC >> 8);
     PushStack(r_PC);
 
     Byte flags = f_N << 7 |
                  f_V << 6 |
-                 1 << 5 |           // unused bit , supposed to be always 1
-                 (t == BRK_) << 4 | // B flag set if BRK
+                 1 << 5 |              // unused bit, supposed to be always 1
+                 (type == BRK_) << 4 | // B flag set if BRK
                  f_D << 3 |
                  f_I << 2 |
                  f_Z << 1 |
                  f_C;
-
     // 保存状态
     PushStack(flags);
+
     f_I = true;
 
-    switch (t)
+    switch (type)
     {
     case IRQ:
     case BRK_:
@@ -123,20 +95,85 @@ void CPU::Interrupt(InterruptType t)
         break;
     }
 
-    m_skip_cycles += 7;
+    m_skipCycles += 7;
 }
 
-// 内存addr处， 保持着一个地址信息
-Address CPU::ReadAddress(Address addr)
+void CPU::SetZN(Byte value)
 {
-    // （1）移位运算符在乘除加减后面，在比较运算符前面
-    // （2）按位与、或、异或在比较运算符后面，在逻辑与、或前面
-    return m_bus.Read(addr) | m_bus.Read(addr + 1) << 8;
+    // value 为 0 则 f_Z 置位
+    f_Z = !value;
+    f_N = value & 0x80;
+}
+
+void CPU::SetPageCrossed(Address a, Address b, int inc)
+{
+    // Page is determined by the high byte
+    if ((a & 0xff00) != (b & 0xff00))
+        m_skipCycles += inc;
+}
+
+void CPU::SkipDMACycles()
+{
+    m_skipCycles += 513;            // 256 read + 256 write + 1 dummy read
+    m_skipCycles += (m_cycles & 1); //+1 if on odd cycle
+}
+
+void CPU::Step()
+{
+    ++m_cycles;
+
+    if (m_skipCycles-- > 1)
+        return;
+
+    m_skipCycles = 0;
+    /* 生成程序状态字 */
+    /*
+    int psw =   f_N << 7 |
+                f_V << 6 |
+                  1 << 5 |
+                f_D << 3 |
+                f_I << 2 |
+                f_Z << 1 |
+                f_C;
+    */
+
+    Byte opcode = m_bus.Read(r_PC++);
+    auto CycleLength = OperationCycles[opcode];
+
+    // LOG(Info) << "CPU Step, PC is 0x"
+    //     << std::hex
+    //     <<  static_cast<int>(GetPC())
+    //     << "\t opcode is:"
+    //     << std::hex
+    //     <<  static_cast<int>(opcode)
+    //     << "\t CycleLength is " << CycleLength
+    //         << std::endl;
+
+    if (CycleLength && (ExecuteImplied(opcode) || ExecuteBranch(opcode) ||
+                        ExecuteType1(opcode) || ExecuteType2(opcode) || ExecuteType0(opcode)))
+    {
+        m_skipCycles += CycleLength;
+    }
+    else
+    {
+        // LOG(Error) << "Unrecognized opcode: " << std::hex << +opcode << std::endl;
+    }
+}
+
+void CPU::Reset(Address start_addr)
+{
+    m_skipCycles = m_cycles = 0;
+    r_A = r_X = r_Y = 0;
+    f_I = true;
+    f_C = f_D = f_N = f_V = f_Z = false;
+    r_PC = start_addr;
+    /* Sp start at 0xfd */
+    r_SP = 0xfd; // documented startup state
 }
 
 bool CPU::ExecuteImplied(Byte opcode)
 {
-    // static_cast 类型转换
+    /* static_cast 类型转换 */
     switch (static_cast<OperationImplied>(opcode))
     {
     case NOP:
@@ -150,7 +187,7 @@ bool CPU::ExecuteImplied(Byte opcode)
         r_PC = ReadAddress(r_PC);
         break;
     case RTS:
-        // return from subroutine
+        /* Return from  Subroutine*/
         r_PC = PullStack();
         r_PC |= PullStack() << 8;
         ++r_PC;
@@ -174,8 +211,12 @@ bool CPU::ExecuteImplied(Byte opcode)
     case JMPI:
     {
         Address location = ReadAddress(r_PC);
+        // 6502 has a bug such that the when the vector of anindirect address begins at the last byte of a page,
+        // the second byte is fetched from the beginning of that page rather than the beginning of the next
+        // Recreating here:
         Address Page = location & 0xff00;
-        r_PC = m_bus.Read(location) | m_bus.Read(Page | ((location + 1) & 0xff)) << 8;
+        r_PC = m_bus.Read(location) |
+               m_bus.Read(Page | ((location + 1) & 0xff)) << 8;
     }
     break;
     case PHP:
@@ -202,7 +243,6 @@ bool CPU::ExecuteImplied(Byte opcode)
         f_C = flags & 0x1;
     }
     break;
-
     case PHA:
         PushStack(r_A);
         break;
@@ -270,21 +310,22 @@ bool CPU::ExecuteImplied(Byte opcode)
         r_X = r_SP;
         SetZN(r_X);
         break;
-
     default:
         return false;
     }
     return true;
 }
-
 bool CPU::ExecuteBranch(Byte opcode)
 {
-    // 跳转指令 实现
-    if ((opcode & BranchConditionMask) == BranchInstructionMaskResult)
+    // 跳转指令实现
+    //
+    if ((opcode & BranchInstructionMask) == BranchInstructionMaskResult)
     {
         // branch is initialized to the condition required (for the flag specified later)
         bool branch = opcode & BranchConditionMask;
 
+        // set branch to true if the given condition is met by the given flag
+        // We use xnor here, it is true if either both operands are true or false
         switch (opcode >> BranchOnFlagShift)
         {
         case Negative:
@@ -310,89 +351,15 @@ bool CPU::ExecuteBranch(Byte opcode)
         if (branch)
         {
             int8_t offset = m_bus.Read(r_PC++);
-            ++m_skip_cycles;
-            auto new_PC = static_cast<Address>(r_PC + offset);
-            SetPageCrossed(r_PC, new_PC, 2);
-            r_PC = new_PC;
+            ++m_skipCycles;
+            auto newPC = static_cast<Address>(r_PC + offset);
+            SetPageCrossed(r_PC, newPC, 2);
+            r_PC = newPC;
         }
         else
-        {
             ++r_PC;
-        }
         return true;
     }
-
-    return false;
-}
-
-bool CPU::ExecuteType0(Byte opcode)
-{
-    if ((opcode & InstructionModeMask) == 0x0)
-    {
-        Address location = 0;
-
-        switch (static_cast<AddressingMode2>((opcode & AddrModeMask) >> AddrModeShift))
-        {
-        case Immediate_:
-            location = r_PC++;
-            break;
-        case ZeroPage_:
-            location = m_bus.Read(r_PC);
-            break;
-        case Absolute_:
-            location = ReadAddress(r_PC);
-            r_PC += 2;
-            break;
-        case Indexed:
-            location = (m_bus.Read(r_PC++) + r_X) & 0xff;
-            break;
-        case AbsoluteIndexed:
-            location = ReadAddress(r_PC);
-            r_PC += 2;
-            SetPageCrossed(location, location + r_X);
-            location += r_X;
-            break;
-        default:
-            return false;
-        }
-
-        std::uint16_t operand = 0;
-        switch (static_cast<Operation0>((opcode & OperationMask) >> OperationShift))
-        {
-        case BIT:
-            operand = m_bus.Read(location);
-            f_Z = !(r_A & operand);
-            f_V = operand & 0x40;
-            f_N = operand & 0x80;
-            break;
-        case STY:
-            m_bus.Write(location, r_Y);
-            break;
-        case LDY:
-            // 调试 时发现  A0 操作码无法解析成功
-            r_Y = m_bus.Read(location);
-            SetZN(r_Y);
-            break;
-        case CPY:
-        {
-            std::uint16_t diff = r_Y - m_bus.Read(location);
-            f_C = !(diff & 0x100);
-            SetZN(diff);
-        }
-        break;
-        case CPX:
-        {
-            std::uint16_t diff = r_X - m_bus.Read(location);
-            f_C = !(diff & 0x100);
-            SetZN(diff);
-        }
-        break;
-        default:
-            return false;
-        }
-        return true;
-    }
-
     return false;
 }
 
@@ -488,7 +455,13 @@ bool CPU::ExecuteType1(Byte opcode)
             /* m_bus.Read()返回4，但是r_A输出是空的，是因为没加强制转换*/
             r_A = m_bus.Read(location);
             SetZN(r_A);
-
+            // LOG(Info) << "LDA: "
+            // << std::hex
+            // <<  static_cast<int>(location)
+            // << "\t R_A IS "
+            // << std::hex
+            // <<  static_cast<int>(r_A)
+            // << std::endl;
             break;
         case SBC:
         {
@@ -644,32 +617,87 @@ bool CPU::ExecuteType2(Byte opcode)
     return false;
 }
 
-void CPU::SetPageCrossed(Address a, Address b, int inc)
-{
-    //  Page is determined by the high byte
-    if ((a & 0xff00) != (b & 0xff00))
-    {
-        m_skip_cycles += inc;
-    }
-}
-
-// 从内存的栈中读/写数据
-void CPU::PushStack(Byte value)
-{
-    m_bus.Write(0x100 | r_SP, value);
-    --r_SP;
-}
-
-Byte CPU::PullStack()
-{
-    return m_bus.Read(0x100 | ++r_SP);
-}
-
-void CPU::SetZN(Byte value)
-{
-    // value 为0 则f_Z 置位
-    f_Z = !value;
-    f_N = value & 0x80;
-}
-
 #define DEBUG_OPCODE 0xA0
+
+bool CPU::ExecuteType0(Byte opcode)
+{
+
+    if ((opcode & InstructionModeMask) == 0x0)
+    {
+        Address location = 0;
+        // if (opcode == DEBUG_OPCODE)
+        // {
+        //     LOG(Info) << "Fetch Instruction :" << std::hex << static_cast<int>(DEBUG_OPCODE) << std::endl;
+        // }
+        switch (static_cast<AddressingMode2>((opcode & AddrModeMask) >> AddrModeShift))
+        {
+        case Immediate_:
+            location = r_PC++;
+            break;
+        case ZeroPage_:
+
+            location = m_bus.Read(r_PC++);
+            break;
+        case Absolute_:
+            location = ReadAddress(r_PC);
+            r_PC += 2;
+            break;
+        case Indexed:
+            // Address wraps around in the zero page
+            location = (m_bus.Read(r_PC++) + r_X) & 0xff;
+            break;
+        case AbsoluteIndexed:
+            location = ReadAddress(r_PC);
+            r_PC += 2;
+            SetPageCrossed(location, location + r_X);
+            location += r_X;
+            break;
+        default:
+            return false;
+        }
+        std::uint16_t operand = 0;
+        switch (static_cast<Operation0>((opcode & OperationMask) >> OperationShift))
+        {
+        case BIT:
+            operand = m_bus.Read(location);
+            f_Z = !(r_A & operand);
+            f_V = operand & 0x40;
+            f_N = operand & 0x80;
+            break;
+        case STY:
+            m_bus.Write(location, r_Y);
+            break;
+        case LDY:
+            // 调试时发现 A0 操作码无法解析成功
+            r_Y = m_bus.Read(location);
+            // LOG(Info) << "LDY: "
+            // << std::hex
+            // <<  static_cast<int>(location)
+            // << "\t r_Y is "
+            // << std::hex
+            // << static_cast<int>(r_A)
+            // << std::endl;
+            SetZN(r_Y);
+            break;
+        case CPY:
+        {
+            std::uint16_t diff = r_Y - m_bus.Read(location);
+            f_C = !(diff & 0x100);
+            SetZN(diff);
+        }
+        break;
+        case CPX:
+        {
+            std::uint16_t diff = r_X - m_bus.Read(location);
+            f_C = !(diff & 0x100);
+            SetZN(diff);
+        }
+        break;
+        default:
+            return false;
+        }
+
+        return true;
+    }
+    return false;
+}

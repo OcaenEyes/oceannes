@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:17
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-27 07:30:19
+ * @LastEditTime: 2024-01-28 12:06:15
  * @FilePath: /vdesktop/src/PictureBus.cc
  * @Description: 注释信息
  */
@@ -45,11 +45,9 @@
 
 */
 
-PictureBus::PictureBus() : m_RAM(0x800), m_palette(0x20), m_mapper(nullptr)
-{
-}
-
-PictureBus::~PictureBus()
+PictureBus::PictureBus() : m_RAM(0x800),
+                           m_palette(0x20),
+                           m_mapper(nullptr)
 {
 }
 
@@ -63,21 +61,13 @@ Byte PictureBus::Read(Address addr)
     {
         auto index = addr & 0x3ff;
         if (addr < 0x2400) // NT0
-        {
-            return m_RAM[m_name_table0 + index];
-        }
+            return m_RAM[m_NameTable0 + index];
         else if (addr < 0x2800) // NT1
-        {
-            return m_RAM[m_name_table1 + index];
-        }
+            return m_RAM[m_NameTable1 + index];
         else if (addr < 0x2c00) // NT2
-        {
-            return m_RAM[m_name_table2 + index];
-        }
+            return m_RAM[m_NameTable2 + index];
         else // NT3
-        {
-            return m_RAM[m_name_table3 + index];
-        }
+            return m_RAM[m_NameTable3 + index];
     }
     else if (addr < 0x3fff)
     {
@@ -88,9 +78,15 @@ Byte PictureBus::Read(Address addr)
     return 0;
 }
 
+/* platette 是 Byte? 不是 Address ？ */
+Byte PictureBus::ReadPalette(Byte platetteAddr)
+{
+    /* 这里也不检查边界？ */
+    return m_palette[platetteAddr];
+}
+
 void PictureBus::Write(Address addr, Byte value)
 {
-    std::cout << "PictureBus::Write(Address addr, Byte value), addr is: " << addr << " value is: " << value << "\n";
     if (addr < 0x2000)
     {
         m_mapper->WriteCHR(addr, value);
@@ -98,33 +94,21 @@ void PictureBus::Write(Address addr, Byte value)
     else if (addr < 0x3eff) // Name tables upto 0x3000, then mirrored upto 3eff
     {
         auto index = addr & 0x3ff;
-        if (addr < 0x2400)
-        {
-            m_RAM[m_name_table0 + index] = value;
-        }
-        else if (addr < 0x2800)
-        {
-            m_RAM[m_name_table1 + index] = value;
-        }
-        else if (addr < 0x2c00)
-        {
-            m_RAM[m_name_table2 + index] = value;
-        }
-        else
-        {
-            m_RAM[m_name_table3 + index] = value;
-        }
+        if (addr < 0x2400) // NT0
+            m_RAM[m_NameTable0 + index] = value;
+        else if (addr < 0x2800) // NT1
+            m_RAM[m_NameTable1 + index] = value;
+        else if (addr < 0x2c00) // NT2
+            m_RAM[m_NameTable2 + index] = value;
+        else // NT3
+            m_RAM[m_NameTable3 + index] = value;
     }
     else if (addr < 0x3fff)
     {
         if (addr == 0x3f10)
-        {
             m_palette[0] = value;
-        }
         else
-        {
             m_palette[addr & 0x1f] = value;
-        }
     }
 }
 
@@ -132,27 +116,27 @@ void PictureBus::UpdateMirroring()
 {
     switch (m_mapper->GetNameTableMirroring())
     {
-    case Horizontal: // 横
-        m_name_table0 = m_name_table1 = 0;
-        m_name_table2 = m_name_table3 = 0x400;
-        LOG_INFO("Horizontal Name table mirroing");
+    case Horizontal:
+        m_NameTable0 = m_NameTable1 = 0;
+        m_NameTable2 = m_NameTable3 = 0x400;
+        LOG(InfoVerbose) << "Horizontal Name Table mirroring set. (Vertical Scrolling)" << std::endl;
         break;
-    case Vertical: // 竖
-        m_name_table0 = m_name_table2 = 0;
-        m_name_table1 = m_name_table3 = 0x400;
-        LOG_INFO("Vertical Name table mirroing");
+    case Vertical:
+        m_NameTable0 = m_NameTable2 = 0;
+        m_NameTable1 = m_NameTable3 = 0x400;
+        LOG(InfoVerbose) << "Vertical Name Table mirroring set. (Horizontal Scrolling)" << std::endl;
         break;
     case OneScreenLower:
-        m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0;
-        LOG_INFO("Single Screen mirroring set with lower bank.");
+        m_NameTable0 = m_NameTable1 = m_NameTable2 = m_NameTable3 = 0;
+        LOG(InfoVerbose) << "Single Screen mirroring set with lower bank." << std::endl;
         break;
     case OneScreenHigher:
-        m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0x400;
-        LOG_INFO("Single Screen mirroring set with higher bank.");
+        m_NameTable0 = m_NameTable1 = m_NameTable2 = m_NameTable3 = 0x400;
+        LOG(InfoVerbose) << "Single Screen mirroring set with higher bank." << std::endl;
         break;
     default:
-        m_name_table0 = m_name_table2 = m_name_table1 = m_name_table3 = 0;
-        LOG_ERROR("Unsupported name table mirroring.");
+        m_NameTable0 = m_NameTable1 = m_NameTable2 = m_NameTable3 = 0;
+        LOG(Error) << "Unsupported Name Table mirroring : " << m_mapper->GetNameTableMirroring() << std::endl;
     }
 }
 
@@ -160,15 +144,10 @@ bool PictureBus::SetMapper(Mapper *mapper)
 {
     if (!mapper)
     {
-        LOG_ERROR("Mapper argument is nullptr.");
+        LOG(Error) << "Mapper argument is nullptr" << std::endl;
         return false;
     }
     m_mapper = mapper;
     UpdateMirroring();
     return true;
-}
-
-Byte PictureBus::ReadPalette(Byte palette_addr)
-{
-    return m_palette[palette_addr];
 }

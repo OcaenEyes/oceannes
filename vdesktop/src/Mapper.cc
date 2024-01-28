@@ -2,43 +2,38 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:35
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 15:30:53
+ * @LastEditTime: 2024-01-28 12:05:40
  * @FilePath: /vdesktop/src/Mapper.cc
  * @Description: 注释信息
  */
 #include "Mapper.h"
 #include "MapperNROM.h"
 
-Mapper::Mapper(Cartridge &cart, MapperType t) : m_cartridge(cart), m_type(t)
-{
-}
 
 NameTableMirroring Mapper::GetNameTableMirroring()
 {
     return static_cast<NameTableMirroring>(m_cartridge.GetNameTableMirroring());
 }
 
-bool Mapper::HasExtendedRAM()
-{
-    return m_cartridge.HasExtendedRAM();
-}
-
-std::unique_ptr<Mapper> Mapper::CreateMapper(MapperType t, Cartridge &cart, std::function<void(void)> mirroring_cb)
+std::unique_ptr<Mapper> Mapper::CreateMapper(Mapper::Type mapper_t, 
+                                             Cartridge& cart,  
+                                            std::function<void(void)> mirroring_cb)
 {
     std::unique_ptr<Mapper> ret(nullptr);
-    switch (t)
+    switch (mapper_t)
     {
-    case NROM:
-        ret.reset(new MapperNROM(cart));
-        break;
-    case SxROM:
-        break;
-    case UxROM:
-        break;
-    case CNROM:
-        break;
-    default:
-        break;
+        case NROM:
+            ret.reset(new MapperNROM(cart));
+            break;
+        case SxROM:
+            // to do 
+            break;
+        case UxROM:
+            // to do 
+            break;
+        case CNROM:
+            // to do 
+            break;
     }
     return ret;
 }

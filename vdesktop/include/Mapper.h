@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:25:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-22 15:30:58
+ * @LastEditTime: 2024-01-28 12:01:12
  * @FilePath: /vdesktop/include/Mapper.h
  * @Description: 注释信息
  */
@@ -12,15 +12,6 @@
 #include <functional>
 
 #include "Cartridge.h"
-
-enum NameTableMirroring
-{
-    Horizontal = 0, // 横
-    Vertical = 1,   // 竖
-    FourScreen = 8,
-    OneScreenLower,
-    OneScreenHigher
-};
 
 /**
  * mapper，这个概念来源于 memory mapping，又叫做 Memory Management Chip，它是解决地址映射的一种电路，简单来说就是决定物理内存如何映射到 CPU 或者 PPU 的地址空间。
@@ -51,33 +42,46 @@ enum NameTableMirroring
  *  mapper003 CNROM，较为出名的游戏有勇者斗恶龙，高桥名人的冒险岛等等
  *
  */
+
+enum NameTableMirroring
+{
+    Horizontal = 0,
+    Vertical = 1,
+    FourScreen = 8,
+    OneScreenLower,
+    OneScreenHigher,
+};
+
 class Mapper
 {
+
 public:
-    enum MapperType
+    enum Type
     {
-        NROM, //  mapper 0  对应最直观的ROM管理方式
-        SxROM,
-        UxROM,
-        CNROM
+        NROM = 0, // mapper 0 对应最直观的ROM管理方式
+        SxROM = 1,
+        UxROM = 2,
+        CNROM = 3,
     };
-
-    Mapper(Cartridge &cart, MapperType t);
-    virtual ~Mapper() = default;
-
+    Mapper(Cartridge &cart, Type t) : m_cartridge(cart), m_type(t){};
+    /* 虚函数 */
     virtual void WritePRG(Address addr, Byte value) = 0;
     virtual Byte ReadPRG(Address addr) = 0;
 
-    virtual void WriteCHR(Address addr, Byte value) = 0;
     virtual Byte ReadCHR(Address addr) = 0;
-
+    virtual void WriteCHR(Address addr, Byte value) = 0;
     virtual NameTableMirroring GetNameTableMirroring();
 
-    bool HasExtendedRAM();
-
-    static std::unique_ptr<Mapper> CreateMapper(MapperType t, Cartridge &cart, std::function<void(void)> mirroring_cb = nullptr);
+    bool inline HasExtendedRAM()
+    {
+        return m_cartridge.HasExtendedRAM();
+    }
+    static std::unique_ptr<Mapper> CreateMapper(Type mapper_t, Cartridge &cart, std::function<void(void)> mirroring_cb = nullptr);
+    // 基类的虚构函数要定义为 virtual，不然会报警告
+    // delete called on 'Mapper' that is abstract but has non-virtual destructor
+    virtual ~Mapper() = default;
 
 protected:
     Cartridge &m_cartridge;
-    MapperType m_type;
+    Type m_type;
 };

@@ -1,3 +1,11 @@
+/*
+ * @Author: OCEAN.GZY
+ * @Date: 2024-01-19 16:26:09
+ * @LastEditors: OCEAN.GZY
+ * @LastEditTime: 2024-01-28 11:56:04
+ * @FilePath: /vdesktop/include/Cartridge.h
+ * @Description: 注释信息
+ */
 #pragma once
 
 #include <vector>
@@ -17,23 +25,20 @@
 
 class Cartridge
 {
-private:
-    std::vector<Byte> m_PRG_ROM; // 存放NES 程序数据
-    std::vector<Byte> m_CHR_ROM; // 角色只读存储器， 用于图像显示
+    public:
+        Cartridge();
+        bool LoadFromFile(std::string path);
+        const std::vector<Byte>& GetROM();
+        const std::vector<Byte>& GetVROM();
+        bool HasExtendedRAM();
+        Byte GetMapper();
+        Byte GetNameTableMirroring();
 
-    Byte m_name_TableMirroring;
-    Byte m_mapper_number; // mapper号，  最基础为0
-    bool m_extended_RAM;  // 卡带中是否存在扩展RAM
+    private:
+        std::vector<Byte> m_PRG_ROM;   // 存放 NES 程序数据
+        std::vector<Byte> m_CHR_ROM;   // 角色只读存储器，用于图像显示
 
-public:
-    Cartridge(/* args */);
-    ~Cartridge();
-
-    bool LoadFromFile(std::string path);
-    const std::vector<Byte> &GetRom();
-    const std::vector<Byte> &GetVRom();
-
-    bool HasExtendedRAM();
-    Byte GetMapper();
-    Byte GetNameTableMirroring();
+        Byte m_nameTableMirroring;   
+        Byte m_mapperNumber;            // mappper号 最基础为0
+        bool m_extendedRAM;             // 卡带中是否存在扩展RAM
 };

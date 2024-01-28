@@ -2,79 +2,78 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:30:09
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-25 22:49:55
+ * @LastEditTime: 2024-01-28 12:06:01
  * @FilePath: /vdesktop/src/MapperNROM.cc
  * @Description: 注释信息
  */
 #include "MapperNROM.h"
 #include "Log.h"
 
+/* NROM-Mapper0: 最简单的实现方式 */
+
 MapperNROM::MapperNROM(Cartridge &cart) : Mapper(cart, Mapper::NROM)
 {
-    // 0x4000 =16 KB
-    if (cart.GetRom().size() == 0x4000)
+    /* 0x4000 = 16 KB */
+    if (cart.GetROM().size() == 0x4000) // 1 bank
     {
-        m_one_bank = true;
+        m_oneBank = true;
+    }
+    else // 2 banks
+    {
+        m_oneBank = false;
+    }
+
+    if (cart.GetVROM().size() == 0)
+    {
+        m_usesCharacterRAM = true;
+        m_characterRAM.resize(0x2000);
+        LOG(Info) << "Uses character RAM" << std::endl;
     }
     else
-    { // 2 banks
-        m_one_bank = false;
-    }
-    // 如果 CHR 为 0 的话，说明卡带上的 CHR 为 RAM 而非 ROM
-    if (cart.GetVRom().size() == 0)
     {
-        m_use_character_RAM = true;
-        m_character_RAM.resize(0x2000);
-        LOG_INFO("Use character RAM");
+        LOG(Info) << "Using CHR-ROM" << std::endl;
+        m_usesCharacterRAM = false;
     }
-    else
-    {
-        LOG_INFO("Use CHR-ROM");
-        m_use_character_RAM = false;
-    }
-}
-
-MapperNROM::~MapperNROM()
-{
-}
-
-void MapperNROM::WritePRG(Address addr, Byte value)
-{
-    LOG_INFO("ROM memory write attempt at %d  to set %d", +addr, +value);
 }
 
 Byte MapperNROM::ReadPRG(Address addr)
 {
-    if (!m_one_bank)
+    if (!m_oneBank)
     {
-        return m_cartridge.GetRom()[addr - 0x8000];
+        return m_cartridge.GetROM()[addr - 0x8000];
+    }
+    else // 镜像读
+    {
+        return m_cartridge.GetROM()[(addr - 0x8000) & 0x3fff];
+    }
+}
+
+void MapperNROM::WritePRG(Address addr, Byte value)
+{
+    LOG(InfoVerbose) << "ROM memory write attempt at " << +addr << " to set " << +value << std::endl;
+}
+
+Byte MapperNROM::ReadCHR(Address addr)
+{
+    // 这里不进行越界判断？
+    if (m_usesCharacterRAM)
+    {
+        return m_characterRAM[addr];
     }
     else
-    { // 镜像读取
-        return m_cartridge.GetRom()[(addr - 0x8000) & 0x3fff];
+    {
+        return m_cartridge.GetVROM()[addr];
     }
 }
 
 void MapperNROM::WriteCHR(Address addr, Byte value)
 {
-    if (m_use_character_RAM)
+    if (m_usesCharacterRAM)
     {
-        m_character_RAM[addr] = value;
+        m_characterRAM[addr] = value;
     }
     else
     {
-        LOG_INFO("Read-only CHR memory write attempt at %s %hu", std::hex, addr);
-    }
-}
-
-Byte MapperNROM::ReadCHR(Address addr)
-{
-    if (m_use_character_RAM)
-    {
-        return m_character_RAM[addr];
-    }
-    else
-    {
-        return m_cartridge.GetVRom()[addr];
+        LOG(Info) << "Read-only CHR memory write attempt at " << std::hex << addr << std::endl;
     }
 }

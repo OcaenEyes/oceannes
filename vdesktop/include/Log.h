@@ -10,62 +10,79 @@
 
 #include <iostream>
 
-#define LOG(level)                               \
-    if (level <= Log::GetInstance().get_level()) \
-    Log::GetInstance().get_log_stream() << '[' << __FILE__ << ':' << std::dec << __LINE__ << ']'
+#ifndef __FILENAME__
+#define __FILENAME__ __FILE__
+#endif
 
-#define LOG_INFO(logmsgformat, ...)                     \
-    do                                                  \
-    {                                                   \
-        Log &log = Log::GetInstance();                  \
-        log.set_level(INFO);                            \
-        char c[1024] = {0};                             \
-        snprintf(c, 1024, logmsgformat, ##__VA_ARGS__); \
-        log.PLog(c);                                    \
-    } while (0);
+#define LOG(level)                     \
+    if (level > Log::get().getLevel()) \
+        ;                              \
+    else                               \
+        Log::get().getStream() << '[' << __FILENAME__ << ":" << std::dec << __LINE__ << "] "
 
-#define LOG_ERROR(logmsgformat, ...)                    \
-    do                                                  \
-    {                                                   \
-        Log &log = Log::GetInstance();                  \
-        log.set_level(ERROR);                           \
-        char c[1024] = {0};                             \
-        snprintf(c, 1024, logmsgformat, ##__VA_ARGS__); \
-        log.PLog(c);                                    \
-    } while (0);
+// #define LOG(level) std::cout
 
-enum LogLevel
+#define LOG_CPU                                    \
+    if (sn::CpuTrace != sn::Log::get().getLevel()) \
+        ;                                          \
+    else                                           \
+        sn::Log::get().getCpuTraceStream()
+
+enum Level
 {
-    NONE,
-    ERROR,
-    INFO,
-    INFOVERBOSE,
-    CPUTRACE
+    None,
+    Error,
+    Info,
+    InfoVerbose,
+    CpuTrace
 };
-
 class Log
 {
-private:
-    LogLevel m_log_level;
-    std::ostream *m_log_stream;
-    std::ostream *m_cpu_trace_stream;
-
-    Log(/* args */);
-    ~Log();
-    Log(const Log &) = delete;
-    Log &operator=(const Log &) = delete;
-
 public:
-    static Log &GetInstance();
+    ~Log();
+    void setLogStream(std::ostream &stream);
+    void setCpuTraceStream(std::ostream &stream);
+    Log &setLevel(Level level);
+    Level getLevel();
 
-    void PLog(std::string msg);
+    std::ostream &getStream();
+    std::ostream &getCpuTraceStream();
 
-    void set_log_stream(std::ostream &stream);
-    void set_cpu_trace_stream(std::ostream &stream);
+    static Log &get();
 
-    std::ostream &get_log_stream();
-    std::ostream &get_cpu_trace_stream();
+private:
+    Level m_logLevel;
+    std::ostream *m_logStream;
+    std::ostream *m_cpuTrace;
+};
 
-    void set_level(LogLevel level);
-    LogLevel get_level();
+// Courtesy of http://wordaligned.org/articles/cpp-streambufs#toctee-streams
+class TeeBuf : public std::streambuf
+{
+public:
+    // Construct a streambuf which tees output to both input
+    // streambufs.
+    TeeBuf(std::streambuf *sb1, std::streambuf *sb2);
+
+private:
+    // This tee buffer has no buffer. So every character "overflows"
+    // and can be put directly into the teed buffers.
+    virtual int overflow(int c);
+    // Sync both teed buffers.
+    virtual int sync();
+
+private:
+    std::streambuf *m_sb1;
+    std::streambuf *m_sb2;
+};
+
+class TeeStream : public std::ostream
+{
+public:
+    // Construct an ostream which tees output to the supplied
+    // ostreams.
+    TeeStream(std::ostream &o1, std::ostream &o2);
+
+private:
+    TeeBuf m_tbuf;
 };
