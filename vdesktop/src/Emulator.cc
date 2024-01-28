@@ -2,8 +2,8 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-28 12:04:49
- * @FilePath: /vdesktop/src/Emulator.cc
+ * @LastEditTime: 2024-01-28 14:34:54
+ * @FilePath: \vdesktop\src\Emulator.cc
  * @Description: 注释信息
  */
 #include "Emulator.h"
@@ -12,7 +12,7 @@
 /*
 A      = J
 B      = K
-Select = RShift
+Select = Q
 Start  = Return
 Up     = W
 Down   = S
@@ -22,7 +22,7 @@ Right  = D
 std::vector<sf::Keyboard::Key> con_one = {
     sf::Keyboard::Key::J,
     sf::Keyboard::Key::K,
-    sf::Keyboard::Key::RShift,
+    sf::Keyboard::Key::Q,
     sf::Keyboard::Key::Return,
     sf::Keyboard::Key::W,
     sf::Keyboard::Key::S,
@@ -129,7 +129,7 @@ void Emulator::Run(std::string rom_path)
     m_ppu.Reset();
 
     m_window.create(sf::VideoMode(NESVideoWidth * m_screenScale, NESVideoHeight * m_screenScale),
-                    "MyNES", sf::Style::Titlebar | sf::Style::Close);
+                    "OCEAN-NES", sf::Style::Titlebar | sf::Style::Close);
     m_window.setVerticalSyncEnabled(true);
     // sf::CircleShape shape(NESVideoWidth);
     // 颜色填充
