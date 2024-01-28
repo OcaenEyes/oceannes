@@ -2,7 +2,7 @@
  * @Author: OCEAN.GZY
  * @Date: 2024-01-19 16:29:14
  * @LastEditors: OCEAN.GZY
- * @LastEditTime: 2024-01-28 14:34:54
+ * @LastEditTime: 2024-01-28 18:08:37
  * @FilePath: \vdesktop\src\Emulator.cc
  * @Description: 注释信息
  */
@@ -12,7 +12,7 @@
 /*
 A      = J
 B      = K
-Select = Q
+Select = Tab
 Start  = Return
 Up     = W
 Down   = S
@@ -22,7 +22,7 @@ Right  = D
 std::vector<sf::Keyboard::Key> con_one = {
     sf::Keyboard::Key::J,
     sf::Keyboard::Key::K,
-    sf::Keyboard::Key::Q,
+    sf::Keyboard::Key::Tab,
     sf::Keyboard::Key::Return,
     sf::Keyboard::Key::W,
     sf::Keyboard::Key::S,
@@ -145,35 +145,48 @@ void Emulator::Run(std::string rom_path)
     {
         while (m_window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            switch (event.type)
             {
+            case sf::Event::EventType::Closed:
                 m_window.close();
-                return;
-            }
-            else if (event.type == sf::Event::GainedFocus)
-            {
+                break;
+            case sf::Event::EventType::GainedFocus:
                 isFocus = true;
                 m_cycleTimer = std::chrono::high_resolution_clock::now();
-            }
-            else if (event.type == sf::Event::LostFocus)
+                break;
+
+            case sf::Event::EventType::LostFocus:
                 isFocus = false;
-            else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F2)
-            {
-                isPause = !isPause;
-                if (!isPause)
-                    m_cycleTimer = std::chrono::high_resolution_clock::now();
-            }
-            else if (isPause && event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::F3)
-            {
-                for (int i = 0; i < 29781; ++i) // Around one frame
+                break;
+            case sf::Event::EventType::KeyPressed:
+                if (event.key.code == sf::Keyboard::F2)
                 {
-                    // PPU
-                    m_ppu.Step();
-                    m_ppu.Step();
-                    m_ppu.Step();
-                    // CPU
-                    m_cpu.Step();
+                    isPause = !isPause;
+                    if (!isPause)
+                        m_cycleTimer = std::chrono::high_resolution_clock::now();
                 }
+
+                if (isPause && event.key.code == sf::Keyboard::F3)
+                {
+                    for (int i = 0; i < 29781; ++i) // Around one frame
+                    {
+                        // PPU
+                        m_ppu.Step();
+                        m_ppu.Step();
+                        m_ppu.Step();
+                        // CPU
+                        m_cpu.Step();
+                    }
+                }
+                break;
+            case sf::Event::EventType::KeyReleased:
+                // 当 Esc 键松开的时候关闭窗口
+                 if (event.key.code == sf::Keyboard::Key::Escape)
+                    m_window.close();
+                break;
+
+            default:
+                break;
             }
         }
 
